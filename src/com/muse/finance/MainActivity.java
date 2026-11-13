@@ -18,6 +18,7 @@ import android.util.Base64;
 import android.webkit.DownloadListener;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -35,6 +36,10 @@ public class MainActivity extends Activity {
     // Text shared to the app (e.g. a Sham Cash receipt): delivered to the
     // page as a draft after it loads, never saved directly.
     private String pendingSharedText;
+    // File picker for the page's hidden file input (backup restore):
+    // without this, tapping "restore" in a WebView does nothing at all.
+    private ValueCallback<Uri[]> fileChooserCallback;
+    private static final int FILE_CHOOSER_REQUEST = 100;
 
     // Native Android speech recognition, exposed to the page as the
     // Capacitor SpeechRecognition plugin the app already expects.
@@ -212,6 +217,23 @@ public class MainActivity extends Activity {
                 // so voice input can ask for the microphone.
                 request.grant(request.getResources());
             }
+
+            @Override
+            public boolean onShowFileChooser(WebView view,
+                    ValueCallback<Uri[]> filePathCallback,
+                    FileChooserParams fileChooserParams) {
+                // Let the user pick a backup JSON file for restore.
+                if (fileChooserCallback != null) fileChooserCallback.onReceiveValue(null);
+                fileChooserCallback = filePathCallback;
+                try {
+                    Intent intent = fileChooserParams.createIntent();
+                    startActivityForResult(intent, FILE_CHOOSER_REQUEST);
+                } catch (Exception e) {
+                    fileChooserCallback = null;
+                    return false;
+                }
+                return true;
+            }
         });
 
         // Blob downloads (the app's Excel/CSV export) are not saved by WebView
@@ -276,6 +298,21 @@ public class MainActivity extends Activity {
         super.onNewIntent(intent);
         setIntent(intent);
         handleShareIntent(intent);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == FILE_CHOOSER_REQUEST) {
+            if (fileChooserCallback == null) return;
+            Uri[] results = null;
+            if (resultCode == RESULT_OK && data != null) {
+                String dataString = data.getDataString();
+                if (dataString != null) results = new Uri[]{Uri.parse(dataString)};
+            }
+            fileChooserCallback.onReceiveValue(results);
+            fileChooserCallback = null;
+        }
     }
 
     @Override
