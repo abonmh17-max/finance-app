@@ -10,7 +10,7 @@ body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-s
 header{background:#0b6e4f;color:#fff;padding:16px 14px 12px;position:sticky;top:0;z-index:5}
 header h1{margin:0;font-size:20px}
 header p{margin:4px 0 0;font-size:13px;opacity:.9}
-main{padding:12px;max-width:900px;margin:0 auto;padding-bottom:40px}
+main{padding:12px;max-width:900px;margin:0 auto;padding-bottom:110px}
 .hero{background:linear-gradient(135deg,#0aa58a 0%,#0b6e4f 55%,#084d38 100%);color:#fff;border-radius:18px;padding:18px 16px 12px;margin-bottom:12px;box-shadow:0 4px 14px rgba(11,110,79,.35)}
 .hero-head{display:flex;justify-content:space-between;align-items:flex-start}
 .hero-title{display:flex;align-items:center;gap:10px}
@@ -79,13 +79,21 @@ input[type=date]{direction:ltr;text-align:right}
 .search-row{display:flex;gap:8px;margin-bottom:8px}
 .search-row input,.search-row select{font-size:14px;padding:9px}
 .hint{font-size:12px;color:#64748b;margin-top:6px}
-.offline{position:fixed;bottom:10px;inset-inline:10px;text-align:center;font-size:12px;color:#475569;background:rgba(255,255,255,.9);border-radius:20px;padding:6px}
+.offline{position:fixed;bottom:78px;inset-inline:10px;text-align:center;font-size:12px;color:#475569;background:rgba(255,255,255,.9);border-radius:20px;padding:6px;z-index:15}
+.tabpage{display:none}
+.tabpage.active{display:block}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:20;background:#fff;border-top:1px solid #e2e8f0;display:flex;box-shadow:0 -2px 10px rgba(0,0,0,.08);padding-bottom:env(safe-area-inset-bottom)}
+.bottomnav button{flex:1;padding:10px 4px 9px;border:none;background:#fff;font-size:15px;font-weight:800;color:#64748b;cursor:pointer;font-family:inherit}
+.bottomnav button.active{color:#0b6e4f}
+.bottomnav button .ic{display:block;font-size:22px;line-height:1.2}
+.bottomnav button span{display:block;font-size:13px;margin-top:2px}
 </style>
 </head>
 <body>
 <header><h1>💰 تنظيم النفقات المالية</h1><p>قبض ودفع • كاش / شام كاش • يعمل دون إنترنت — البيانات محفوظة على جهازك فقط</p></header>
 <main>
 
+<section id="pageHome" class="tabpage active">
 <div class="hero" id="heroBalance">
 <div class="hero-head">
 <div class="hero-title">
@@ -103,7 +111,9 @@ input[type=date]{direction:ltr;text-align:right}
 <div class="hero-lockrow" id="heroLockRow"></div>
 <p class="hero-note">🔒 القفل شاشة خصوصية على جهازك فقط وليس حماية بنكية — الرقم محفوظ على جهازك، ومن يستطيع فتح هاتفك قد يصل للبيانات. «نسيت الرقم؟» يزيل القفل فقط ولا يحذف أي عملية.</p>
 </div>
+</section>
 
+<section id="pageDetails" class="tabpage">
 <div class="card">
 <h2>إضافة عملية جديدة</h2>
 <button class="btn" id="micBtn" type="button" style="background:#7c3aed;margin-top:0">🎙️ إدخال صوتي — تحدث بالعربية</button>
@@ -177,8 +187,13 @@ input[type=date]{direction:ltr;text-align:right}
 </div>
 <p class="hint">التصدير يشمل عمود التاريخ، ويصدّر الحركات المعروضة حسب الفلاتر أعلاه. ملف Excel فيه 3 أوراق: الحركات، الملخص الكلي، ملخص الفترة.</p>
 </div>
+</section>
 
 </main>
+<nav class="bottomnav" aria-label="التنقل الرئيسي">
+<button id="navHome" type="button" class="active" onclick="switchTab('home')"><span class="ic">🏠</span><span>الرئيسية</span></button>
+<button id="navDetails" type="button" onclick="switchTab('details')"><span class="ic">📋</span><span>التفاصيل</span></button>
+</nav>
 <div class="offline">📴 يعمل دون إنترنت • لا حساب ولا خادم • البيانات على جهازك فقط</div>
 <script>
 /*! xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
@@ -305,6 +320,20 @@ let heroCur=localStorage.getItem('finance_hero_currency')||'SYP';
 if(!['SYP','USD','EUR'].includes(heroCur)) heroCur='SYP';
 let heroPin=localStorage.getItem('finance_hero_pin')||'';
 let heroLocked=!!heroPin && localStorage.getItem('finance_hero_locked')!=='0';
+// Bottom tabs (Home / Details): remember last active tab, device only.
+let activeTab=localStorage.getItem('finance_active_tab')||'home';
+if(activeTab!=='details') activeTab='home';
+window.switchTab=function(t){
+  activeTab=(t==='details')?'details':'home';
+  localStorage.setItem('finance_active_tab', activeTab);
+  var h=document.getElementById('pageHome'), d=document.getElementById('pageDetails');
+  if(h) h.classList.toggle('active', activeTab==='home');
+  if(d) d.classList.toggle('active', activeTab==='details');
+  var nh=document.getElementById('navHome'), nd=document.getElementById('navDetails');
+  if(nh) nh.classList.toggle('active', activeTab==='home');
+  if(nd) nd.classList.toggle('active', activeTab==='details');
+  window.scrollTo({top:0});
+};
 function heroMasked(){ return heroHidden || heroLocked; }
 let txs=[];
 try{ txs=JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch(e){ txs=[]; }
@@ -413,6 +442,7 @@ function render(){
 }
 window.editTx=function(id){
   const t=txs.find(x=>x.id===id); if(!t) return;
+  window.switchTab('details');
   setType(t.type); document.getElementById('editId').value=t.id;
   document.getElementById('amount').value=t.amount; document.getElementById('currency').value=t.currency;
   document.getElementById('wallet').value=t.wallet; document.getElementById('txDate').value=t.date;
@@ -564,7 +594,7 @@ window.heroForgotPin=function(){
   if(!confirm('نسيت الرقم؟ سيتم إزالة القفل فقط — لن تُحذف أي عملية أو رصيد. القفل شاشة خصوصية على جهازك وليس حماية بنكية. هل تريد إزالة القفل؟')) return;
   heroPin=''; heroLocked=false; localStorage.removeItem('finance_hero_pin'); localStorage.removeItem('finance_hero_locked'); render();
 };
-setType('income'); render();
+setType('income'); window.switchTab(activeTab); render();
 </script>
 </body>
 </html>
