@@ -85,7 +85,7 @@ input[type=date]{direction:ltr;text-align:right}
 .bar{height:8px;background:#e2e8f0;border-radius:6px;overflow:hidden;margin:3px 0 8px}
 .bar i{display:block;height:100%;background:#0b6e4f}
 .bar.exp i{background:#b42318}
-.tx{border:1px solid #e2e8f0;border-radius:12px;padding:10px;margin-bottom:8px;background:#fff}
+.tx{border:1px solid #e2e8f0;border-radius:12px;padding:10px;margin-bottom:8px;background:#fff;cursor:pointer}
 .tx .top{display:flex;justify-content:space-between;gap:8px}
 .tx .amt{font-weight:800;font-size:17px;white-space:nowrap}
 .tx .amt.in{color:#0b6e4f}.tx .amt.out{color:#b42318}
@@ -326,6 +326,19 @@ input[type=date]{direction:ltr;text-align:right}
 </div>
 </div>
 </div>
+
+<div id="detailModal" class="pin-overlay" style="display:none">
+<div class="pin-box" style="text-align:right">
+<h3 id="detailTitle">تفاصيل العملية</h3>
+<div id="detailBody" style="font-size:15px;line-height:2;color:#334155;margin-top:10px"></div>
+<div class="confirm-actions">
+<button class="btn" id="detailEdit" type="button" style="background:#0b6e4f">✏️ تعديل</button>
+<button class="btn confirm-ok" id="detailDel" type="button">🗑️ حذف</button>
+</div>
+<button class="btn secondary" id="detailClose" type="button" style="margin-top:10px">إغلاق</button>
+</div>
+</div>
+
 <div id="confirmModal" class="pin-overlay" style="display:none">
 <div class="pin-box">
 <h3 id="confirmTitle">هل تريد تأكيد الحذف؟</h3>
@@ -688,10 +701,10 @@ function render(){
   let prevDate='';
   list.innerHTML=shown.map(t=>{
     const sign=t.type==='income'?'+':'−';
-    const head=(t.date!==prevDate)?'<div class="date-head">📅 '+t.date+'</div>':'';
+    const head=(t.date!==prevDate)?'<div class="date-head">📅 '+weekdayName(t.date)+' '+t.date+'</div>':'';
     prevDate=t.date;
     const cardStyle=t.type==='income'?' style="background:#e8f8f1;border-color:#34a97b"':' style="background:#fdf0ef;border-color:#e8a49e"';
-    return head+'<div class="tx"'+cardStyle+'><div class="top"><div><b>'+(t.type==='income'?'⬇ قبض':'⬆ دفع')+' — '+t.category+'</b><span class="date-badge">📅 '+t.date+'</span><div class="meta">'+t.desc+' • '+curName(t.currency)+' • '+WALLET[t.wallet]+'</div>'+(t.note?'<div class="meta">📝 ملاحظات: '+t.note+'</div>':'')+'</div><div class="amt '+(t.type==='income'?'in':'out')+'">'+sign+' '+fmt(t.amount)+' '+t.currency+'</div></div><div class="actions"><button onclick="editTx(\''+t.id+'\')">✏️ تعديل</button><button onclick="delTx(\''+t.id+'\')">🗑️ حذف</button></div></div>';
+    return head+'<div class="tx"'+cardStyle+' onclick="showTx(\''+t.id+'\')"><div class="top"><div><b>'+(t.type==='income'?'⬇ قبض':'⬆ دفع')+' — '+t.category+'</b><span class="date-badge">📅 '+weekdayName(t.date)+' '+t.date+'</span><div class="meta">'+t.desc+' • '+curName(t.currency)+' • '+WALLET[t.wallet]+'</div>'+(t.note?'<div class="meta">📝 ملاحظات: '+t.note+'</div>':'')+'</div><div class="amt '+(t.type==='income'?'in':'out')+'">'+sign+' '+fmt(t.amount)+' '+t.currency+'</div></div></div>';
   }).join('');
 }
 window.editTx=function(id){
@@ -711,6 +724,32 @@ window.delTx=async function(id){
   if(!(await askConfirm(msg))) return;
   txs=txs.filter(x=>x.id!==id); save(); render();
 };
+// ---- Transaction details modal: tap a card -> full details + edit/delete ----
+// Keeps the list uncluttered: no per-card buttons anymore.
+function weekdayName(dStr){
+  const p=(dStr||'').split('-'); if(p.length!==3) return '';
+  const d=new Date(+p[0],+p[1]-1,+p[2]); if(isNaN(d)) return '';
+  return ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][d.getDay()];
+}
+let detailId=null;
+window.showTx=function(id){
+  const t=txs.find(function(x){ return x.id===id; }); if(!t) return;
+  detailId=id;
+  document.getElementById('detailTitle').textContent=(t.type==='income'?'⬇ قبض':'⬆ دفع')+' — '+t.category;
+  document.getElementById('detailBody').innerHTML=
+    '<div><b>المبلغ:</b> '+fmt(t.amount)+' '+t.currency+'</div>'+
+    '<div><b>التاريخ:</b> '+weekdayName(t.date)+' '+t.date+'</div>'+
+    '<div><b>المحفظة:</b> '+WALLET[t.wallet]+'</div>'+
+    '<div><b>البيان:</b> '+escAttr(t.desc)+'</div>'+
+    (t.note?'<div><b>ملاحظات:</b> '+escAttr(t.note)+'</div>':'');
+  document.getElementById('detailModal').style.display='flex';
+};
+function detailClose(){ document.getElementById('detailModal').style.display='none'; detailId=null; }
+document.getElementById('detailClose').onclick=detailClose;
+document.getElementById('detailModal').addEventListener('click',function(e){ if(e.target===this) detailClose(); });
+document.getElementById('detailEdit').onclick=function(){ const id=detailId; detailClose(); if(id) editTx(id); };
+document.getElementById('detailDel').onclick=async function(){ const id=detailId; if(!id) return; detailClose(); await delTx(id); };
+
 // ---- Debts tab (💳 الديون): record-only, NEVER touches the balance ----
 // A debt is not a cash movement: it changes nothing in hero/summary/report
 // until a payment is recorded AND the user agrees to log it as a transaction.
