@@ -186,6 +186,13 @@ input[type=date]{direction:ltr;text-align:right}
 <button class="btn secondary" id="exportCsv" type="button" style="flex:1">📄 تصدير CSV</button>
 </div>
 <p class="hint">التصدير يشمل عمود التاريخ، ويصدّر الحركات المعروضة حسب الفلاتر أعلاه. ملف Excel فيه 3 أوراق: الحركات، الملخص الكلي، ملخص الفترة.</p>
+<h3 style="margin-top:14px">💾 النسخة الاحتياطية</h3>
+<div style="display:flex;gap:8px;margin-top:10px">
+<button class="btn secondary" id="backupBtn" type="button" style="flex:1">💾 أخذ نسخة احتياطية</button>
+<button class="btn secondary" id="restoreBtn" type="button" style="flex:1">♻️ استعادة نسخة</button>
+<input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
+</div>
+<p class="hint">النسخة الاحتياطية ملف واحد يشمل كل حركاتك وإعداداتك (العملة المختارة، الإخفاء، القفل والرقم، آخر تبويب). احتفظ به في مكان آمن — فهو يحتوي كل بياناتك، ومنه تستعيد كل شيء بعد إعادة تثبيت التطبيق. الاستعادة تستبدل كل الحركات الحالية بعد تأكيدك.</p>
 </div>
 </section>
 
@@ -503,6 +510,82 @@ document.getElementById('exportCsv').onclick=()=>{
   const csv='\uFEFF'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download='finance-report.csv'; a.click();
 };
+// ---- Backup & Restore (offline, device only) ----
+// Backup: one JSON file with ALL transactions + hero/tab settings.
+// Restore: validates the file, asks for confirmation, then replaces
+// localStorage data and re-renders. The backup file contains the PIN
+// (as stored on the device), so keep the file somewhere safe.
+function backupSettings(){
+  return {
+    heroCurrency: heroCur,
+    heroHidden: heroHidden ? '1' : '0',
+    heroPin: heroPin || '',
+    heroLocked: heroLocked ? '1' : '0',
+    activeTab: activeTab
+  };
+}
+function downloadTextFile(filename, text, mime){
+  // Same blob-download path as the CSV export: in the Android app the
+  // WebView DownloadListener / AndroidSaver bridge saves it to Downloads.
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([text],{type:mime||'application/json;charset=utf-8'}));
+  a.download=filename; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+}
+document.getElementById('backupBtn').onclick=()=>{
+  const d=new Date();
+  const stamp=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const data={ app:'finance-app', version:1, exportedAt:new Date().toISOString(), transactions:txs, settings:backupSettings() };
+  downloadTextFile('finance-backup-'+stamp+'.json', JSON.stringify(data,null,2));
+  alert('تم أخذ النسخة الاحتياطية ('+txs.length+' حركة). احتفظ بالملف في مكان آمن.');
+};
+document.getElementById('restoreBtn').onclick=()=>{ document.getElementById('restoreFile').click(); };
+document.getElementById('restoreFile').addEventListener('change',function(){
+  const f=this.files && this.files[0]; this.value='';
+  if(!f) return;
+  const reader=new FileReader();
+  reader.onerror=()=>alert('تعذّرت قراءة الملف — حاول مرة أخرى.');
+  reader.onload=()=>{
+    let data;
+    try{ data=JSON.parse(reader.result); }catch(e){ alert('هذا الملف ليس نسخة احتياطية صالحة — ملف JSON غير صحيح.'); return; }
+    if(!data || typeof data!=='object' || !Array.isArray(data.transactions)){ alert('هذا الملف ليس نسخة احتياطية صالحة — لا يحتوي على قائمة حركات.'); return; }
+    // Validate + normalise each entry; skip malformed ones instead of failing the whole restore.
+    const valid=[];
+    data.transactions.forEach(t=>{
+      if(!t || typeof t!=='object') return;
+      if(t.type!=='income' && t.type!=='expense') return;
+      const amount=Number(t.amount); if(!isFinite(amount) || amount<=0) return;
+      if(!['SYP','USD','EUR','TRY'].includes(t.currency)) return;
+      if(t.wallet!=='cash' && t.wallet!=='sham') return;
+      if(typeof t.date!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(t.date)) return;
+      valid.push({
+        id: typeof t.id==='string' && t.id ? t.id : ('tx'+Date.now()+Math.floor(Math.random()*100000)),
+        createdAt: Number(t.createdAt)||Date.now(),
+        type:t.type, amount:amount, currency:t.currency, wallet:t.wallet, date:t.date,
+        category: typeof t.category==='string' ? t.category : 'أخرى',
+        desc: typeof t.desc==='string' ? t.desc : '',
+        note: typeof t.note==='string' ? t.note : ''
+      });
+    });
+    if(!confirm('سيتم استبدال جميع الحركات الحالية ('+txs.length+' حركة) بنسخة الاحتياطية ('+valid.length+' حركة صالحة من أصل '+data.transactions.length+'). هل أنت متأكد؟')) return;
+    txs=valid; save();
+    // Restore settings if present (validated); otherwise keep current settings.
+    const st=(data.settings && typeof data.settings==='object') ? data.settings : {};
+    if(['SYP','USD','EUR'].includes(st.heroCurrency)){ heroCur=st.heroCurrency; localStorage.setItem('finance_hero_currency', heroCur); }
+    if(st.heroHidden==='1' || st.heroHidden==='0'){ heroHidden=st.heroHidden==='1'; localStorage.setItem('finance_hero_hidden', st.heroHidden); }
+    if(typeof st.heroPin==='string' && /^(\d{4})?$/.test(st.heroPin)){
+      heroPin=st.heroPin;
+      if(heroPin) localStorage.setItem('finance_hero_pin', heroPin);
+      else localStorage.removeItem('finance_hero_pin');
+    }
+    heroLocked=!!heroPin && st.heroLocked!=='0';
+    if(heroLocked) localStorage.setItem('finance_hero_locked','1'); else localStorage.setItem('finance_hero_locked','0');
+    if(st.activeTab==='details' || st.activeTab==='home') activeTab=st.activeTab;
+    window.switchTab(activeTab); render();
+    alert('تمت الاستعادة بنجاح — '+valid.length+' حركة.');
+  };
+  reader.readAsText(f);
+});
 // ---- Voice input (mic) ----
 // Order: 1) native Android speech recognition via Capacitor plugin (may work offline
 // if the Arabic language pack is downloaded on the phone, otherwise it needs internet),
