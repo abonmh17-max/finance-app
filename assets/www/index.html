@@ -49,7 +49,6 @@ main{padding:12px;max-width:900px;margin:0 auto;padding-bottom:110px}
 .pin-error{color:#b42318;font-size:13px;font-weight:700;min-height:18px;margin:4px 0}
 .pin-actions{display:flex;gap:10px;margin-top:10px}
 .pin-actions .btn{flex:1;margin-top:0}
-.hero-note{font-size:11px;opacity:.8;margin:10px 0 0}
 .card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .card h2{margin:0 0 10px;font-size:17px}
 .tabs{display:flex;gap:8px;margin-bottom:10px}
@@ -89,6 +88,10 @@ input[type=date]{direction:ltr;text-align:right}
 .search-row{display:flex;gap:8px;margin-bottom:8px}
 .search-row input,.search-row select{font-size:14px;padding:9px}
 .hint{font-size:12px;color:#64748b;margin-top:6px}
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-width:24px;border-radius:50%;border:1.5px solid #94a3b8;background:#fff;color:#64748b;font-size:15px;font-weight:800;line-height:1;cursor:pointer;vertical-align:middle;padding:0}
+.hero .info-btn{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.5);color:#fff}
+#infoPop{position:fixed;bottom:78px;inset-inline:12px;z-index:60;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.25);font-size:14px;line-height:1.8;color:#334155}
+#infoPopClose{display:block;margin:10px auto 0;padding:8px 22px;border:none;border-radius:10px;background:#0b6e4f;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
 .tabpage{display:none}
 .tabpage.active{display:block}
 .bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:20;background:#fff;border-top:1px solid #e2e8f0;display:flex;box-shadow:0 -2px 10px rgba(0,0,0,.08);padding-bottom:env(safe-area-inset-bottom)}
@@ -110,6 +113,7 @@ input[type=date]{direction:ltr;text-align:right}
 <div><h2>رصيدي</h2></div>
 </div>
 <div class="hero-head-btns">
+<button class="info-btn" type="button" title="ما هو القفل؟" data-info="🔒 القفل شاشة خصوصية على جهازك فقط وليس حماية بنكية — الرقم محفوظ على جهازك، ومن يستطيع فتح هاتفك قد يصل للبيانات. «نسيت الرقم؟» يزيل القفل فقط ولا يحذف أي عملية.">ⓘ</button>
 <button class="hero-eye" id="lockBtn" type="button" title="قفل / فتح الرصيد">🔓</button>
 <button class="hero-eye" id="eyeBtn" type="button" title="إظهار / إخفاء الأرصدة">👁️</button>
 </div>
@@ -118,15 +122,13 @@ input[type=date]{direction:ltr;text-align:right}
 <div class="hero-main" id="heroMain"></div>
 <div class="hero-mini" id="heroBalances"></div>
 <div class="hero-lockrow" id="heroLockRow"></div>
-<p class="hero-note">🔒 القفل شاشة خصوصية على جهازك فقط وليس حماية بنكية — الرقم محفوظ على جهازك، ومن يستطيع فتح هاتفك قد يصل للبيانات. «نسيت الرقم؟» يزيل القفل فقط ولا يحذف أي عملية.</p>
 </div>
 </section>
 
 <section id="pageDetails" class="tabpage">
 <div class="card">
 <h2>إضافة عملية جديدة</h2>
-<button class="btn" id="micBtn" type="button" style="background:#7c3aed;margin-top:0">🎙️ إدخال صوتي — تحدث بالعربية</button>
-<p class="hint">مثال: «دفعت 5000 ليرة سورية كاش للطعام اليوم» أو «قبضت 300 دولار شام كاش راتب». سيظهر النص وما فهمناه كمسودة للمراجعة — ولا يُحفظ شيء قبل أن تضغط «حفظ» بنفسك.</p>
+<div style="display:flex;gap:8px;align-items:center"><button class="btn" id="micBtn" type="button" style="background:#7c3aed;margin-top:0;flex:1">🎙️ إدخال صوتي — تحدث بالعربية</button><button class="info-btn" type="button" title="كيف يعمل الإدخال الصوتي؟" data-info="مثال: «دفعت 5000 ليرة سورية كاش للطعام اليوم» أو «قبضت 300 دولار شام كاش راتب». سيظهر النص وما فهمناه كمسودة للمراجعة — ولا يُحفظ شيء قبل أن تضغط «حفظ» بنفسك.">ⓘ</button></div>
 <div id="voiceBox" style="display:none;background:#f5f3ff;border:1px solid #c4b5fd;border-radius:10px;padding:10px;margin-bottom:10px"></div>
 <div class="tabs">
 <button id="tabInc" type="button" class="active-inc">⬇ قبض</button>
@@ -145,9 +147,8 @@ input[type=date]{direction:ltr;text-align:right}
 <div><label>مكان المبلغ *</label><select id="wallet">
 <option value="cash">كاش</option><option value="sham">شام كاش</option>
 </select></div>
-<div><label>التاريخ *</label><input id="txDate" type="date" required></div>
+<div><label>التاريخ * <button class="info-btn" type="button" title="ما هو هذا التاريخ؟" data-info="⚠️ التاريخ هو تاريخ العملية نفسها، وليس وقت إدخالها. إذا كانت العملية قديمة، غيّر التاريخ لتاريخها الحقيقي، وستُحسب في تقرير ذلك التاريخ وليس في تقرير اليوم.">ⓘ</button></label><input id="txDate" type="date" required></div>
 </div>
-<p class="hint">⚠️ التاريخ هو تاريخ العملية نفسها، وليس وقت إدخالها. إذا كانت العملية قديمة، غيّر التاريخ لتاريخها الحقيقي، وستُحسب في تقرير ذلك التاريخ وليس في تقرير اليوم.</p>
 <div><label id="catLabel">نوع القبض *</label><select id="category"></select></div>
 <div><label>البيان *</label><input id="desc" type="text" placeholder="مثال: راتب شهر تشرين الثاني / شراء خضار من السوق" required></div>
 <div><label>ملاحظات (اختياري)</label><textarea id="note" rows="3" placeholder="ملاحظات إضافية عن هذه العملية — يمكن كتابة ملاحظات طويلة هنا"></textarea></div>
@@ -195,28 +196,24 @@ input[type=date]{direction:ltr;text-align:right}
 
 <section id="pageSettings" class="tabpage">
 <div class="card">
-<h2>🔒 قفل الرصيد</h2>
+<h2>🔒 قفل الرصيد <button class="info-btn" type="button" title="ما هو القفل؟" data-info="🔒 القفل شاشة خصوصية على جهازك فقط وليس حماية بنكية — الرقم محفوظ على جهازك، ومن يستطيع فتح هاتفك قد يصل للبيانات. «نسيت الرقم؟» يزيل القفل فقط ولا يحذف أي عملية.">ⓘ</button></h2>
 <p class="hint" id="settingsLockStatus" style="font-size:14px;color:#334155"></p>
 <div id="settingsLockBtns" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
-<p class="hint">🔒 القفل شاشة خصوصية على جهازك فقط وليس حماية بنكية — الرقم محفوظ على جهازك، ومن يستطيع فتح هاتفك قد يصل للبيانات. «نسيت الرقم؟» يزيل القفل فقط ولا يحذف أي عملية.</p>
 </div>
 <div class="card" style="border:2px solid #0b6e4f;background:#ecfdf5">
-<h2 style="margin-top:0">💾 النسخة الاحتياطية والاستعادة</h2>
-<p class="hint" style="font-size:14px;color:#334155">احفظ نسخة من كل حركاتك وإعداداتك في ملف واحد، واستعدها في أي وقت — قبل إعادة تثبيت التطبيق أو تغيير الهاتف.</p>
+<h2 style="margin-top:0">💾 النسخة الاحتياطية والاستعادة <button class="info-btn" type="button" title="ما هي النسخة الاحتياطية؟" data-info="احفظ نسخة من كل حركاتك وإعداداتك في ملف واحد، واستعدها في أي وقت — قبل إعادة تثبيت التطبيق أو تغيير الهاتف. النسخة الاحتياطية ملف واحد يشمل كل حركاتك وإعداداتك (العملة المختارة، الإخفاء، القفل والرقم، آخر تبويب). احتفظ به في مكان آمن — فهو يحتوي كل بياناتك، ومنه تستعيد كل شيء بعد إعادة تثبيت التطبيق. الاستعادة تستبدل كل الحركات الحالية بعد تأكيدك.">ⓘ</button></h2>
 <div style="display:flex;gap:10px;margin-top:12px">
 <button class="btn" id="backupBtn" type="button" style="flex:1;font-size:19px;font-weight:800;padding:16px 8px;margin-top:0;background:#0b6e4f">💾 أخذ نسخة احتياطية</button>
 <button class="btn" id="restoreBtn" type="button" style="flex:1;font-size:19px;font-weight:800;padding:16px 8px;margin-top:0;background:#0369a1">♻️ استعادة نسخة</button>
 <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
 </div>
-<p class="hint">النسخة الاحتياطية ملف واحد يشمل كل حركاتك وإعداداتك (العملة المختارة، الإخفاء، القفل والرقم، آخر تبويب). احتفظ به في مكان آمن — فهو يحتوي كل بياناتك، ومنه تستعيد كل شيء بعد إعادة تثبيت التطبيق. الاستعادة تستبدل كل الحركات الحالية بعد تأكيدك.</p>
 </div>
 <div class="card">
-<h2>📊 تصدير البيانات</h2>
+<h2>📊 تصدير البيانات <button class="info-btn" type="button" title="ماذا يشمل التصدير؟" data-info="التصدير يشمل عمود التاريخ وكل الحركات. ملف Excel فيه 3 أوراق: الحركات، الملخص الكلي، ملخص الفترة.">ⓘ</button></h2>
 <div style="display:flex;gap:8px;margin-top:10px">
 <button class="btn secondary" id="exportBtn" type="button" style="flex:1">📊 تصدير إلى Excel (.xlsx)</button>
 <button class="btn secondary" id="exportCsv" type="button" style="flex:1">📄 تصدير CSV</button>
 </div>
-<p class="hint">التصدير يشمل عمود التاريخ وكل الحركات. ملف Excel فيه 3 أوراق: الحركات، الملخص الكلي، ملخص الفترة.</p>
 </div>
 </section>
 
@@ -226,6 +223,7 @@ input[type=date]{direction:ltr;text-align:right}
 <button id="navDetails" type="button" onclick="switchTab('details')"><span class="ic">📋</span><span>الحركات النقدية</span></button>
 <button id="navSettings" type="button" onclick="switchTab('settings')"><span class="ic">⚙️</span><span>الإعدادات</span></button>
 </nav>
+<div id="infoPop" style="display:none"><div id="infoPopText"></div><button id="infoPopClose" type="button">إغلاق</button></div>
 <div id="pinModal" class="pin-overlay" style="display:none">
 <div class="pin-box">
 <h3 id="pinTitle">أدخل الرقم</h3>
@@ -384,6 +382,23 @@ window.switchTab=function(t){
   if(ns) ns.classList.toggle('active', activeTab==='settings');
   window.scrollTo({top:0});
 };
+// ---- Info icons: helper texts hidden behind ⓘ, tap to show in a popover ----
+(function(){
+  var pop=document.getElementById('infoPop'), txt=document.getElementById('infoPopText');
+  if(!pop || !txt) return;
+  document.querySelectorAll('.info-btn').forEach(function(b){
+    b.addEventListener('click', function(e){
+      e.stopPropagation();
+      var t=b.getAttribute('data-info')||'';
+      if(pop.style.display==='block' && txt.textContent===t){ pop.style.display='none'; return; }
+      txt.textContent=t; pop.style.display='block';
+    });
+  });
+  document.getElementById('infoPopClose').addEventListener('click', function(){ pop.style.display='none'; });
+  document.addEventListener('click', function(e){
+    if(pop.style.display==='block' && !pop.contains(e.target) && !e.target.classList.contains('info-btn')) pop.style.display='none';
+  });
+})();
 function heroMasked(){ return heroHidden || heroLocked; }
 let txs=[];
 try{ txs=JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch(e){ txs=[]; }
