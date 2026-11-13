@@ -690,7 +690,8 @@ function render(){
     const sign=t.type==='income'?'+':'−';
     const head=(t.date!==prevDate)?'<div class="date-head">📅 '+t.date+'</div>':'';
     prevDate=t.date;
-    return head+'<div class="tx"><div class="top"><div><b>'+(t.type==='income'?'⬇ قبض':'⬆ دفع')+' — '+t.category+'</b><span class="date-badge">📅 '+t.date+'</span><div class="meta">'+t.desc+' • '+curName(t.currency)+' • '+WALLET[t.wallet]+'</div>'+(t.note?'<div class="meta">📝 ملاحظات: '+t.note+'</div>':'')+'</div><div class="amt '+(t.type==='income'?'in':'out')+'">'+sign+' '+fmt(t.amount)+' '+t.currency+'</div></div><div class="actions"><button onclick="editTx(\''+t.id+'\')">✏️ تعديل</button><button onclick="delTx(\''+t.id+'\')">🗑️ حذف</button></div></div>';
+    const cardStyle=t.type==='income'?' style="background:#e8f8f1;border-color:#34a97b"':' style="background:#fdf0ef;border-color:#e8a49e"';
+    return head+'<div class="tx"'+cardStyle+'><div class="top"><div><b>'+(t.type==='income'?'⬇ قبض':'⬆ دفع')+' — '+t.category+'</b><span class="date-badge">📅 '+t.date+'</span><div class="meta">'+t.desc+' • '+curName(t.currency)+' • '+WALLET[t.wallet]+'</div>'+(t.note?'<div class="meta">📝 ملاحظات: '+t.note+'</div>':'')+'</div><div class="amt '+(t.type==='income'?'in':'out')+'">'+sign+' '+fmt(t.amount)+' '+t.currency+'</div></div><div class="actions"><button onclick="editTx(\''+t.id+'\')">✏️ تعديل</button><button onclick="delTx(\''+t.id+'\')">🗑️ حذف</button></div></div>';
   }).join('');
 }
 window.editTx=function(id){
