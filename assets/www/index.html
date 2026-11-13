@@ -95,7 +95,7 @@ input[type=date]{direction:ltr;text-align:right}
 .bottomnav button{flex:1;padding:10px 4px 9px;border:none;background:#fff;font-size:15px;font-weight:800;color:#64748b;cursor:pointer;font-family:inherit}
 .bottomnav button.active{color:#0b6e4f}
 .bottomnav button .ic{display:block;font-size:22px;line-height:1.2}
-.bottomnav button span{display:block;font-size:13px;margin-top:2px}
+.bottomnav button span{display:block;font-size:12px;margin-top:2px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -223,7 +223,7 @@ input[type=date]{direction:ltr;text-align:right}
 </main>
 <nav class="bottomnav" aria-label="التنقل الرئيسي">
 <button id="navHome" type="button" class="active" onclick="switchTab('home')"><span class="ic">🏠</span><span>الرئيسية</span></button>
-<button id="navDetails" type="button" onclick="switchTab('details')"><span class="ic">📋</span><span>حركة المال</span></button>
+<button id="navDetails" type="button" onclick="switchTab('details')"><span class="ic">📋</span><span>الحركات النقدية</span></button>
 <button id="navSettings" type="button" onclick="switchTab('settings')"><span class="ic">⚙️</span><span>الإعدادات</span></button>
 </nav>
 <div id="pinModal" class="pin-overlay" style="display:none">
