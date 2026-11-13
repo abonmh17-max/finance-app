@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modern wallet / money launcher icon: teal-green wallet, gold coin, rising chart.
+     Flat vector drawable (text file) — no PNG needed. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- dark green rounded background -->
+    <path
+        android:fillColor="#084D38"
+        android:pathData="M12,0 h84 a12,12 0 0,1 12,12 v84 a12,12 0 0,1 -12,12 h-84 a12,12 0 0,1 -12,-12 v-84 a12,12 0 0,1 12,-12 z" />
+    <!-- gold coin peeking out of the wallet -->
+    <path
+        android:fillColor="#F5B301"
+        android:pathData="M63,36 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0 z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#D99A00"
+        android:strokeWidth="2"
+        android:pathData="M67,36 a11,11 0 1,0 22,0 a11,11 0 1,0 -22,0 z" />
+    <!-- dollar sign on the coin -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#8A5A00"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M78,25 L78,47" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#8A5A00"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M84,30 C84,26 72,26 72,31 C72,36 84,34 84,39 C84,44 72,44 72,40" />
+    <!-- wallet body -->
+    <path
+        android:fillColor="#0AA58A"
+        android:pathData="M24,46 h60 a8,8 0 0,1 8,8 v24 a8,8 0 0,1 -8,8 h-60 a8,8 0 0,1 -8,-8 v-24 a8,8 0 0,1 8,-8 z" />
+    <!-- wallet flap (lighter teal stripe) -->
+    <path
+        android:fillColor="#12C39A"
+        android:pathData="M24,46 h60 a8,8 0 0,1 8,8 v2 h-76 v-2 a8,8 0 0,1 8,-8 z" />
+    <!-- rising chart line on the wallet -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M26,78 L42,64 L54,72 L76,54" />
+    <!-- wallet clasp -->
+    <path
+        android:fillColor="#FFD166"
+        android:pathData="M80,66 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 z" />
+</vector>

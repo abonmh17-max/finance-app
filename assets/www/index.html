@@ -13,6 +13,8 @@ header p{margin:4px 0 0;font-size:13px;opacity:.9}
 main{padding:12px;max-width:900px;margin:0 auto;padding-bottom:40px}
 .hero{background:linear-gradient(135deg,#0aa58a 0%,#0b6e4f 55%,#084d38 100%);color:#fff;border-radius:18px;padding:18px 16px 12px;margin-bottom:12px;box-shadow:0 4px 14px rgba(11,110,79,.35)}
 .hero-head{display:flex;justify-content:space-between;align-items:flex-start}
+.hero-title{display:flex;align-items:center;gap:10px}
+.hero-logo{width:46px;height:46px;flex:none;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 .hero-head h2{margin:0;font-size:19px}
 .hero-head p{margin:4px 0 0;font-size:12px;opacity:.85}
 .hero-eye{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:50%;width:42px;height:42px;font-size:20px;cursor:pointer;flex:none}
@@ -86,7 +88,10 @@ input[type=date]{direction:ltr;text-align:right}
 
 <div class="hero" id="heroBalance">
 <div class="hero-head">
-<div><h2>👛 رصيدي</h2><p>إجمالي رصيدك في كل العملات — يتحدث مع كل عملية</p></div>
+<div class="hero-title">
+<svg class="hero-logo" viewBox="0 0 108 108" role="img" aria-label="أيقونة المحفظة"><rect x="0" y="0" width="108" height="108" rx="14" fill="#084d38"/><circle cx="78" cy="36" r="15" fill="#f5b301"/><circle cx="78" cy="36" r="11" fill="none" stroke="#d99a00" stroke-width="2"/><path d="M78 25v22" stroke="#8a5a00" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M84 30c0-4-12-4-12 1s12 3 12 8-12 4-12-1" stroke="#8a5a00" stroke-width="3.5" stroke-linecap="round" fill="none"/><rect x="16" y="46" width="76" height="40" rx="8" fill="#0aa58a"/><rect x="16" y="46" width="76" height="10" rx="8" fill="#12c39a"/><polyline points="26,78 42,64 54,72 76,54" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="86" cy="66" r="6" fill="#ffd166"/></svg>
+<div><h2>رصيدي</h2><p>إجمالي رصيدك في كل العملات — يتحدث مع كل عملية</p></div>
+</div>
 <div class="hero-head-btns">
 <button class="hero-eye" id="lockBtn" type="button" title="قفل / فتح الرصيد">🔓</button>
 <button class="hero-eye" id="eyeBtn" type="button" title="إظهار / إخفاء الأرصدة">👁️</button>
