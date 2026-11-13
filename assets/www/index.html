@@ -114,6 +114,8 @@ input[type=date]{direction:ltr;text-align:right}
 .bottomnav button.active{color:#0b6e4f}
 .bottomnav button .ic{display:block;font-size:22px;line-height:1.2}
 .bottomnav button span{display:block;font-size:12px;margin-top:2px;white-space:nowrap}
+.debt-due{color:#b42318;font-weight:800}
+
 </style>
 </head>
 <body>
@@ -209,6 +211,51 @@ input[type=date]{direction:ltr;text-align:right}
 </div>
 </section>
 
+
+<section id="pageDebts" class="tabpage">
+<div class="card">
+<h2>💳 الديون</h2>
+<p class="hint">الديون هنا للتسجيل والتذكير فقط — لا تدخل في الرصيد ولا في الحركات النقدية، إلا عند السداد إذا اخترت تسجيل الدفعة كحركة نقدية.</p>
+<div id="debtSummary" class="summary-grid"></div>
+</div>
+<div class="card">
+<h2>إضافة دين جديد</h2>
+<div class="tabs">
+<button id="debtTabOwed" type="button" class="active-inc">⬇ دين لي على شخص</button>
+<button id="debtTabOwe" type="button">⬆ دين عليّ لشخص</button>
+</div>
+<form id="debtForm">
+<input type="hidden" id="debtEditId" value="">
+<div><label>اسم الشخص *</label><input id="debtPerson" type="text" placeholder="مثال: أحمد" required maxlength="50"></div>
+<div class="row">
+<div><label>المبلغ *</label><input id="debtAmount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="مثال: 100" required></div>
+<div><label>العملة *</label><select id="debtCurrency"></select></div>
+</div>
+<div class="row">
+<div><label>تاريخ الدين *</label><input id="debtDate" type="date" required></div>
+<div><label>تاريخ الاستحقاق (اختياري)</label><input id="debtDue" type="date"></div>
+</div>
+<div><label>ملاحظات (اختياري)</label><textarea id="debtNote" rows="2" placeholder="ملاحظات عن هذا الدين"></textarea></div>
+<button class="btn" id="debtSaveBtn" type="submit">💾 حفظ الدين</button>
+<button class="btn secondary" id="debtCancelEdit" type="button" style="display:none">إلغاء التعديل</button>
+</form>
+</div>
+<div class="card">
+<h2>قائمة الديون</h2>
+<div class="filters" id="debtFilters">
+<button data-f="all" class="active">الكل</button>
+<button data-f="owed">دين لي</button>
+<button data-f="owe">دين عليّ</button>
+<button data-f="open">قائمة</button>
+<button data-f="paid">مسددة</button>
+</div>
+<div class="search-row">
+<input id="debtSearch" type="search" placeholder="🔍 ابحث باسم الشخص...">
+</div>
+<div id="debtList"></div>
+</div>
+</section>
+
 <section id="pageSettings" class="tabpage">
 <div class="card">
 <h2>🔒 قفل الرصيد <button class="info-btn" type="button" title="ما هو القفل؟" data-info="🔒 القفل شاشة خصوصية على جهازك فقط وليس حماية بنكية — الرقم محفوظ على جهازك، ومن يستطيع فتح هاتفك قد يصل للبيانات. «نسيت الرقم؟» يزيل القفل فقط ولا يحذف أي عملية.">ⓘ</button></h2>
@@ -240,7 +287,7 @@ input[type=date]{direction:ltr;text-align:right}
 </div>
 </div>
 <div class="card">
-<h2>📊 تصدير البيانات <button class="info-btn" type="button" title="ماذا يشمل التصدير؟" data-info="التصدير يشمل عمود التاريخ وكل الحركات. ملف Excel فيه 3 أوراق: الحركات، الملخص الكلي، ملخص الفترة.">ⓘ</button></h2>
+<h2>📊 تصدير البيانات <button class="info-btn" type="button" title="ماذا يشمل التصدير؟" data-info="التصدير يشمل عمود التاريخ وكل الحركات. ملف Excel فيه 4 أوراق: الحركات، الملخص الكلي، ملخص الفترة، الديون.">ⓘ</button></h2>
 <div style="display:flex;gap:8px;margin-top:10px">
 <button class="btn secondary" id="exportBtn" type="button" style="flex:1">📊 تصدير إلى Excel (.xlsx)</button>
 <button class="btn secondary" id="exportCsv" type="button" style="flex:1">📄 تصدير CSV</button>
@@ -252,6 +299,7 @@ input[type=date]{direction:ltr;text-align:right}
 <nav class="bottomnav" aria-label="التنقل الرئيسي">
 <button id="navHome" type="button" class="active" onclick="switchTab('home')"><span class="ic">🏠</span><span>الرئيسية</span></button>
 <button id="navDetails" type="button" onclick="switchTab('details')"><span class="ic">📋</span><span>الحركات النقدية</span></button>
+<button id="navDebts" type="button" onclick="switchTab('debts')"><span class="ic">💳</span><span>الديون</span></button>
 <button id="navSettings" type="button" onclick="switchTab('settings')"><span class="ic">⚙️</span><span>الإعدادات</span></button>
 </nav>
 <div id="infoPop" style="display:none"><div id="infoPopText"></div><button id="infoPopClose" type="button">إغلاق</button></div>
@@ -449,18 +497,20 @@ let heroPin=localStorage.getItem('finance_hero_pin')||'';
 let heroLocked=!!heroPin && localStorage.getItem('finance_hero_locked')!=='0';
 // Bottom tabs (Home / Details / Settings): remember last active tab, device only.
 let activeTab=localStorage.getItem('finance_active_tab')||'home';
-if(!['home','details','settings'].includes(activeTab)) activeTab='home';
+if(!['home','details','settings','debts'].includes(activeTab)) activeTab='home';
 window.switchTab=function(t){
-  activeTab=['home','details','settings'].includes(t)?t:'home';
+  activeTab=['home','details','settings','debts'].includes(t)?t:'home';
   localStorage.setItem('finance_active_tab', activeTab);
-  var h=document.getElementById('pageHome'), d=document.getElementById('pageDetails'), sg=document.getElementById('pageSettings');
+  var h=document.getElementById('pageHome'), d=document.getElementById('pageDetails'), sg=document.getElementById('pageSettings'), db=document.getElementById('pageDebts');
   if(h) h.classList.toggle('active', activeTab==='home');
   if(d) d.classList.toggle('active', activeTab==='details');
   if(sg) sg.classList.toggle('active', activeTab==='settings');
-  var nh=document.getElementById('navHome'), nd=document.getElementById('navDetails'), ns=document.getElementById('navSettings');
+  if(db) db.classList.toggle('active', activeTab==='debts');
+  var nh=document.getElementById('navHome'), nd=document.getElementById('navDetails'), ns=document.getElementById('navSettings'), nb=document.getElementById('navDebts');
   if(nh) nh.classList.toggle('active', activeTab==='home');
   if(nd) nd.classList.toggle('active', activeTab==='details');
   if(ns) ns.classList.toggle('active', activeTab==='settings');
+  if(nb) nb.classList.toggle('active', activeTab==='debts');
   window.scrollTo({top:0});
 };
 // ---- Info icons: helper texts hidden behind ⓘ, tap to show in a popover ----
@@ -539,7 +589,7 @@ function render(){
     else slb.innerHTML='<button type="button" class="btn" onclick="heroLockNow()" style="flex:1">🔒 قفل الرصيد الآن</button><button type="button" class="btn secondary" onclick="heroChangePin()" style="flex:1">تغيير الرقم</button><button type="button" class="btn" onclick="heroRemoveLock()" style="flex:1;background:#b42318">🗑️ إزالة القفل</button>';
   }
   // Settings tab: editable categories + currencies lists, and currency dropdowns
-  syncCurrencySelects(); renderCatLists(); renderCurList();
+  syncCurrencySelects(); renderCatLists(); renderCurList(); renderDebts();
   const lockBtn=document.getElementById('lockBtn'); if(lockBtn) lockBtn.textContent= heroLocked ? '🔒' : '🔓';
   const eyeBtn=document.getElementById('eyeBtn'); if(eyeBtn) eyeBtn.textContent= heroHidden ? '🙈' : '👁️';
   // Summary per currency (all time)
@@ -613,6 +663,146 @@ window.delTx=async function(id){
   if(!(await askConfirm(msg))) return;
   txs=txs.filter(x=>x.id!==id); save(); render();
 };
+// ---- Debts tab (💳 الديون): record-only, NEVER touches the balance ----
+// A debt is not a cash movement: it changes nothing in hero/summary/report
+// until a payment is recorded AND the user agrees to log it as a transaction.
+const DEBTS_KEY='finance_debts_v1';
+let debts=[];
+try{ debts=JSON.parse(localStorage.getItem(DEBTS_KEY)||'[]'); }catch(e){ debts=[]; }
+if(!Array.isArray(debts)) debts=[];
+function saveDebts(){ localStorage.setItem(DEBTS_KEY, JSON.stringify(debts)); }
+let debtType='owed', debtFilter='all';
+function debtRemaining(d){ return Math.max(0, (+d.amount||0) - (+d.paid||0)); }
+function debtStatus(d){ return debtRemaining(d)<=0 ? 'paid' : ((+d.paid||0)>0 ? 'partial' : 'open'); }
+function debtDueInfo(d){
+  if(!d.due || debtStatus(d)==='paid') return '';
+  const today=todayISO();
+  const diff=Math.round((new Date(d.due+'T00:00:00')-new Date(today+'T00:00:00'))/86400000);
+  if(diff<0) return ' • ⏰ متأخر '+(-diff)+' يوم';
+  if(diff===0) return ' • ⏰ يستحق اليوم';
+  if(diff<=7) return ' • ⏰ يستحق خلال '+diff+' أيام';
+  return ' • 📅 يستحق '+d.due;
+}
+function renderDebts(){
+  const sumEl=document.getElementById('debtSummary'); if(!sumEl) return;
+  let h='';
+  Object.keys(CUR).forEach(function(c){
+    const owed=debts.filter(function(d){ return d.type==='owed'&&d.currency===c; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
+    const owe=debts.filter(function(d){ return d.type==='owe'&&d.currency===c; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
+    if(owed||owe) h+='<div class="sum"><h3>'+CUR[c]+'</h3><div class="big rem">لي: '+fmt(owed)+'</div><small class="inc">عليّ: '+fmt(owe)+'</small><small>الصافي لي: '+fmt(owed-owe)+'</small></div>';
+  });
+  sumEl.innerHTML=h||'<p class="empty">لا ديون مسجلة بعد.</p>';
+  const q=(document.getElementById('debtSearch').value||'').trim();
+  const sorted=[...debts].sort(function(a,b){
+    const sa=debtStatus(a), sb=debtStatus(b);
+    if(sa==='paid'&&sb!=='paid') return 1;
+    if(sa!=='paid'&&sb==='paid') return -1;
+    return (a.due||'9999').localeCompare(b.due||'9999') || (b.date||'').localeCompare(a.date||'');
+  });
+  const shown=sorted.filter(function(d){
+    if(debtFilter==='owed'&&d.type!=='owed') return false;
+    if(debtFilter==='owe'&&d.type!=='owe') return false;
+    if(debtFilter==='open'&&debtStatus(d)==='paid') return false;
+    if(debtFilter==='paid'&&debtStatus(d)!=='paid') return false;
+    if(q && !((d.person||'')+' '+(d.note||'')).includes(q)) return false;
+    return true;
+  });
+  const list=document.getElementById('debtList'); if(!list) return;
+  if(!shown.length){ list.innerHTML='<p class="empty">لا توجد ديون مطابقة.</p>'; return; }
+  list.innerHTML=shown.map(function(d){
+    const st=debtStatus(d), rem=debtRemaining(d);
+    const label=d.type==='owed'?'⬇ دين لي':'⬆ دين عليّ';
+    const cls=d.type==='owed'?'in':'out';
+    const badge=st==='paid'?'✅ مسدد بالكامل':(st==='partial'?'🟡 مسدد جزئياً':'🔴 قائم');
+    const overdue=(d.due && st!=='paid' && d.due<todayISO());
+    const style=overdue?' style="border-color:#b42318;background:#fef2f2"':'';
+    return '<div class="tx"'+style+'><div class="top"><div><b>'+label+' — '+escAttr(d.person)+'</b><span class="date-badge">📅 '+d.date+'</span><div class="meta">'+badge+' • '+curName(d.currency)+debtDueInfo(d)+'</div><div class="meta">المبلغ: '+fmt(d.amount)+' '+d.currency+' • المسدد: '+fmt(d.paid||0)+' • المتبقي: '+fmt(rem)+'</div>'+(d.note?'<div class="meta">📝 '+escAttr(d.note)+'</div>':'')+'</div><div class="amt '+cls+'">'+fmt(rem)+' '+d.currency+'</div></div><div class="actions">'+(st!=='paid'?'<button onclick="debtPay(\''+d.id+'\')">💰 تسجيل دفعة</button><button onclick="debtSettle(\''+d.id+'\')">✅ تسديد كامل</button>':'')+'<button onclick="editDebt(\''+d.id+'\')">✏️ تعديل</button><button onclick="delDebt(\''+d.id+'\')">🗑️ حذف</button></div></div>';
+  }).join('');
+}
+function setDebtType(t){
+  debtType=t;
+  document.getElementById('debtTabOwed').className=t==='owed'?'active-inc':'';
+  document.getElementById('debtTabOwe').className=t==='owe'?'active-exp':'';
+}
+document.getElementById('debtTabOwed').onclick=function(){ setDebtType('owed'); };
+document.getElementById('debtTabOwe').onclick=function(){ setDebtType('owe'); };
+document.getElementById('debtDate').value=todayISO();
+document.getElementById('debtForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const amount=parseFloat(document.getElementById('debtAmount').value);
+  const person=document.getElementById('debtPerson').value.trim();
+  if(!person){ alert('اكتب اسم الشخص'); return; }
+  if(!amount||amount<=0){ alert('أدخل مبلغاً صحيحاً'); return; }
+  const data={type:debtType,person:person,amount:amount,currency:document.getElementById('debtCurrency').value,date:document.getElementById('debtDate').value||todayISO(),due:document.getElementById('debtDue').value||'',note:document.getElementById('debtNote').value.trim()};
+  const eid=document.getElementById('debtEditId').value;
+  if(eid){
+    const i=debts.findIndex(function(x){ return x.id===eid; });
+    if(i>=0) debts[i]=Object.assign({},debts[i],data);
+    document.getElementById('debtEditId').value='';
+    document.getElementById('debtCancelEdit').style.display='none';
+  } else {
+    debts.push(Object.assign({id:'db'+Date.now()+Math.floor(Math.random()*1000),createdAt:Date.now(),paid:0},data));
+  }
+  saveDebts(); e.target.reset(); document.getElementById('debtDate').value=todayISO(); setDebtType('owed'); render();
+});
+document.getElementById('debtCancelEdit').onclick=function(){
+  document.getElementById('debtEditId').value=''; document.getElementById('debtForm').reset();
+  document.getElementById('debtDate').value=todayISO(); this.style.display='none'; setDebtType('owed');
+};
+window.editDebt=function(id){
+  const d=debts.find(function(x){ return x.id===id; }); if(!d) return;
+  window.switchTab('debts'); setDebtType(d.type);
+  document.getElementById('debtEditId').value=d.id;
+  document.getElementById('debtPerson').value=d.person;
+  document.getElementById('debtAmount').value=d.amount;
+  document.getElementById('debtCurrency').value=d.currency;
+  document.getElementById('debtDate').value=d.date;
+  document.getElementById('debtDue').value=d.due||'';
+  document.getElementById('debtNote').value=d.note||'';
+  document.getElementById('debtCancelEdit').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+window.delDebt=async function(id){
+  const d=debts.find(function(x){ return x.id===id; }); if(!d) return;
+  const msg='حذف هذا الدين؟\n'+(d.type==='owed'?'دين لي على ':'دين عليّ لـ ')+d.person+' • '+fmt(d.amount)+' '+d.currency+' • المتبقي '+fmt(debtRemaining(d));
+  if(!(await askConfirm(msg))) return;
+  debts=debts.filter(function(x){ return x.id!==id; }); saveDebts(); render();
+};
+async function recordDebtPayment(d, amt){
+  const isOwed=d.type==='owed';
+  const msg='هل تريد تسجيل هذه الدفعة كحركة نقدية الآن؟\n'+(isOwed?'قبض ':'دفع ')+fmt(amt)+' '+d.currency+' — '+(isOwed?'من ':'إلى ')+d.person+'\nإذا اخترت «إلغاء» يُسجَّل السداد في الدين فقط ولا يتغير الرصيد.';
+  if(!(await askConfirm(msg,'تسجيل كحركة نقدية؟'))) return;
+  txs.push({id:'tx'+Date.now()+Math.floor(Math.random()*1000),createdAt:Date.now(),type:isOwed?'income':'expense',amount:amt,currency:d.currency,wallet:'cash',date:todayISO(),category:isOwed?'سداد دين':'تسديد دين',desc:(isOwed?'سداد دين من ':'تسديد دين إلى ')+d.person,note:'دين بتاريخ '+d.date});
+  save();
+}
+window.debtPay=async function(id){
+  const d=debts.find(function(x){ return x.id===id; }); if(!d) return;
+  const rem=debtRemaining(d); if(rem<=0) return;
+  const v=window.prompt('أدخل مبلغ الدفعة ('+d.currency+') — المتبقي '+fmt(rem)+':');
+  if(v===null) return;
+  const amt=parseFloat(v);
+  if(!amt||amt<=0){ alert('أدخل مبلغاً صحيحاً'); return; }
+  if(amt>rem){ alert('المبلغ أكبر من المتبقي ('+fmt(rem)+')'); return; }
+  await recordDebtPayment(d, amt);
+  d.paid=(+d.paid||0)+amt; saveDebts(); render();
+};
+window.debtSettle=async function(id){
+  const d=debts.find(function(x){ return x.id===id; }); if(!d) return;
+  const rem=debtRemaining(d); if(rem<=0) return;
+  if(!(await askConfirm('تسديد كامل المتبقي؟\n'+fmt(rem)+' '+d.currency+' — '+(d.type==='owed'?'من ':'إلى ')+d.person,'تأكيد التسديد الكامل؟'))) return;
+  await recordDebtPayment(d, rem);
+  d.paid=+d.amount; saveDebts(); render();
+};
+document.getElementById('debtFilters').addEventListener('click',function(e){
+  if(e.target.dataset.f){
+    debtFilter=e.target.dataset.f;
+    document.querySelectorAll('#debtFilters button').forEach(function(b){ b.classList.toggle('active',b===e.target); });
+    render();
+  }
+});
+document.getElementById('debtSearch').addEventListener('input',render);
+setDebtType('owed');
+
 document.getElementById('cancelEdit').onclick=()=>{ document.getElementById('editId').value=''; document.getElementById('form').reset(); document.getElementById('txDate').value=todayISO(); document.getElementById('cancelEdit').style.display='none'; setCats(); };
 document.getElementById('form').addEventListener('submit',e=>{
   e.preventDefault();
@@ -655,6 +845,8 @@ document.getElementById('exportBtn').onclick=()=>{
   const ptx=txs.filter(t=>inPeriod(t.date));
   const periodRows=[...summaryRows(ptx).map(r=>({...r,'الفترة':periodName()})), ...catRows(ptx,'expense').map(r=>({'العملة':'مصروف — '+r['الفئة'],'إجمالي القبض':'','إجمالي الدفع':r['المبلغ'],'المتبقي':'','الفترة':periodName()})), ...catRows(ptx,'income').map(r=>({'العملة':'قبض — '+r['الفئة'],'إجمالي القبض':r['المبلغ'],'إجمالي الدفع':'','المتبقي':'','الفترة':periodName()}))];
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(periodRows), 'ملخص الفترة');
+  const debtRows=debts.map(function(d){ return { 'التاريخ':d.date, 'النوع':d.type==='owed'?'دين لي':'دين عليّ', 'الشخص':d.person, 'العملة':curName(d.currency), 'المبلغ':+d.amount, 'المسدد':+(d.paid||0), 'المتبقي':debtRemaining(d), 'تاريخ الاستحقاق':d.due||'', 'الحالة':debtStatus(d)==='paid'?'مسدد':(debtStatus(d)==='partial'?'مسدد جزئياً':'قائم'), 'ملاحظات':d.note||'' }; });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(debtRows.length?debtRows:[{'التاريخ':'','النوع':'','الشخص':'لا توجد ديون','العملة':'','المبلغ':0,'المسدد':0,'المتبقي':0,'تاريخ الاستحقاق':'','الحالة':'','ملاحظات':''}]), 'الديون');
   XLSX.writeFile(wb, 'finance-report.xlsx');
   alert('تم التصدير إلى Excel');
 };
@@ -668,6 +860,7 @@ document.getElementById('exportCsv').onclick=()=>{
 function escAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 function syncCurrencySelects(){
   const cur=document.getElementById('currency'); if(cur){ const prev=cur.value; cur.innerHTML=curs.map(c=>'<option value="'+c.code+'">'+c.name+'</option>').join(''); if(CUR[prev]) cur.value=prev; }
+  const dc=document.getElementById('debtCurrency'); if(dc){ const dprev=dc.value; dc.innerHTML=curs.map(c=>'<option value="'+c.code+'">'+c.name+'</option>').join(''); if(CUR[dprev]) dc.value=dprev; }
   const fc=document.getElementById('filterCur'); if(fc){ const fprev=fc.value; fc.innerHTML='<option value="">كل العملات</option>'+curs.map(c=>'<option value="'+c.code+'">'+c.name+'</option>').join(''); if(fprev==='' || CUR[fprev]) fc.value=fprev; }
 }
 function renderCatLists(){
@@ -766,9 +959,9 @@ function downloadTextFile(filename, text, mime){
 document.getElementById('backupBtn').onclick=()=>{
   const d=new Date();
   const stamp=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  const data={ app:'finance-app', version:1, exportedAt:new Date().toISOString(), transactions:txs, settings:backupSettings() };
+  const data={ app:'finance-app', version:1, exportedAt:new Date().toISOString(), transactions:txs, debts:debts, settings:backupSettings() };
   downloadTextFile('finance-backup-'+stamp+'.json', JSON.stringify(data,null,2));
-  alert('تم أخذ النسخة الاحتياطية ('+txs.length+' حركة). احتفظ بالملف في مكان آمن.');
+  alert('تم أخذ النسخة الاحتياطية ('+txs.length+' حركة، '+debts.length+' دين). احتفظ بالملف في مكان آمن.');
 };
 document.getElementById('restoreBtn').onclick=()=>{ document.getElementById('restoreFile').click(); };
 document.getElementById('restoreFile').addEventListener('change',function(){
@@ -803,8 +996,19 @@ document.getElementById('restoreFile').addEventListener('change',function(){
         note: typeof t.note==='string' ? t.note : ''
       });
     });
-    if(!(await askConfirm('سيتم استبدال جميع الحركات الحالية ('+txs.length+' حركة) بنسخة الاحتياطية ('+valid.length+' حركة صالحة من أصل '+data.transactions.length+').', 'هل تريد تأكيد الاستعادة؟'))) return;
+    const validDebts=[];
+    if(Array.isArray(data.debts)){ data.debts.forEach(function(x){
+      if(!x || typeof x!=='object') return;
+      if(x.type!=='owed' && x.type!=='owe') return;
+      const a=Number(x.amount); if(!isFinite(a) || a<=0) return;
+      if(!allowedCurs.has(x.currency)) return;
+      if(typeof x.date!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(x.date)) return;
+      const p=Number(x.paid)||0;
+      validDebts.push({id: typeof x.id==='string' && x.id ? x.id : ('db'+Date.now()+Math.floor(Math.random()*100000)), createdAt: Number(x.createdAt)||Date.now(), type:x.type, person: typeof x.person==='string' ? x.person : '', amount:a, paid:Math.min(Math.max(p,0),a), currency:x.currency, date:x.date, due: typeof x.due==='string' ? x.due : '', note: typeof x.note==='string' ? x.note : ''});
+    }); }
+    if(!(await askConfirm('سيتم استبدال جميع الحركات الحالية ('+txs.length+' حركة) والديون الحالية ('+debts.length+' دين) بنسخة الاحتياطية ('+valid.length+' حركة صالحة من أصل '+data.transactions.length+'، '+validDebts.length+' دين).', 'هل تريد تأكيد الاستعادة؟'))) return;
     txs=valid; save();
+    debts=validDebts; saveDebts();
     // Restore settings if present (validated); otherwise keep current settings.
     const st=st0;
     if(restoredCurs){ curs=restoredCurs; saveCurs(); }
@@ -822,7 +1026,7 @@ document.getElementById('restoreFile').addEventListener('change',function(){
     if(heroLocked) localStorage.setItem('finance_hero_locked','1'); else localStorage.setItem('finance_hero_locked','0');
     if(['home','details','settings'].includes(st.activeTab)) activeTab=st.activeTab;
     window.switchTab(activeTab); render();
-    alert('تمت الاستعادة بنجاح — '+valid.length+' حركة.');
+    alert('تمت الاستعادة بنجاح — '+valid.length+' حركة، '+validDebts.length+' دين.');
   };
   reader.readAsText(f);
 });
