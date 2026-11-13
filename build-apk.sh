@@ -29,11 +29,21 @@ with zipfile.ZipFile("build/apk/app.apk", "a", compression=zipfile.ZIP_DEFLATED,
     z.write("assets/www/index.html", "assets/www/index.html")
 PY
 "$BT/zipalign" -f 4 build/apk/app.apk build/app-aligned.apk
+# Use ONE persistent signing key so updates install over the old app.
+# Each GitHub Actions run is a fresh VM, so generating a new keystore
+# every time made every build signed with a different key, and Android
+# refuses updates signed with a different key ("App not installed").
+# debug.keystore.b64 is a base64 copy of a single debug keystore committed
+# to the repo (debug key only — not a release signing key).
 if [ ! -f debug.keystore ]; then
-  keytool -genkeypair -v -keystore debug.keystore -alias androiddebugkey \
-    -keyalg RSA -keysize 2048 -validity 10000 \
-    -storepass android -keypass android \
-    -dname "CN=Android Debug,O=Android,C=US"
+  if [ -f debug.keystore.b64 ]; then
+    base64 -d debug.keystore.b64 > debug.keystore
+  else
+    keytool -genkeypair -v -keystore debug.keystore -alias androiddebugkey \
+      -keyalg RSA -keysize 2048 -validity 10000 \
+      -storepass android -keypass android \
+      -dname "CN=Android Debug,O=Android,C=US"
+  fi
 fi
 "$BT/apksigner" sign --ks debug.keystore --ks-key-alias androiddebugkey \
   --ks-pass pass:android --key-pass pass:android \
