@@ -159,6 +159,7 @@ public class MainActivity extends Activity {
 
     private String guessMime(String filename) {
         if (filename.endsWith(".csv")) return "text/csv";
+        if (filename.endsWith(".json")) return "application/json";
         if (filename.endsWith(".xlsx"))
             return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
         return "application/octet-stream";
