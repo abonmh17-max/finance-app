@@ -32,6 +32,9 @@ import org.json.JSONObject;
 public class MainActivity extends Activity {
     private WebView webView;
     private SpeechRecognizer speechRecognizer;
+    // Text shared to the app (e.g. a Sham Cash receipt): delivered to the
+    // page as a draft after it loads, never saved directly.
+    private String pendingSharedText;
 
     // Native Android speech recognition, exposed to the page as the
     // Capacitor SpeechRecognition plugin the app already expects.
@@ -192,11 +195,13 @@ public class MainActivity extends Activity {
                     + "};"
                     + "window.__voiceResult=function(t){var r=window.__voiceResolve;window.__voiceResolve=null;if(r)r({matches:[t]});};"
                     + "window.__voiceError=function(){var r=window.__voiceResolve;window.__voiceResolve=null;if(r)r({matches:[]});};"
+                    + "window.__sharedText=function(t){if(window.applySharedText)window.applySharedText(t);};"
                     + "window.Capacitor={Plugins:{SpeechRecognition:{"
                     + "requestPermissions:function(){return Promise.resolve();},"
                     + "start:function(opts){return new Promise(function(res,rej){window.__voiceResolve=res;window.__voiceReject=rej;AndroidSpeech.start();});}"
                     + "}}};"
                     + "})();", null);
+                deliverSharedText();
             }
         });
 
@@ -240,6 +245,37 @@ public class MainActivity extends Activity {
         }
 
         webView.loadUrl("file:///android_asset/www/index.html");
+
+        handleShareIntent(getIntent());
+    }
+
+    // ACTION_SEND (text/plain) from another app, e.g. sharing a Sham Cash
+    // receipt. The text is queued and passed to the page once it loads;
+    // the page shows it as a draft for the user to confirm, never saves it.
+    private void handleShareIntent(Intent intent) {
+        if (intent == null) return;
+        if (!Intent.ACTION_SEND.equals(intent.getAction())) return;
+        if (!"text/plain".equals(intent.getType())) return;
+        String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+        if (text == null || text.trim().isEmpty()) return;
+        pendingSharedText = text;
+        deliverSharedText();
+    }
+
+    private void deliverSharedText() {
+        if (webView == null || pendingSharedText == null) return;
+        try {
+            String quoted = JSONObject.quote(pendingSharedText);
+            pendingSharedText = null;
+            webView.evaluateJavascript("window.__sharedText(" + quoted + ")", null);
+        } catch (Exception ignored) {}
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleShareIntent(intent);
     }
 
     @Override

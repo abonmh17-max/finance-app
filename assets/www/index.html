@@ -1126,10 +1126,10 @@ document.getElementById('restoreFile').addEventListener('change',function(){
 // if the Arabic language pack is downloaded on the phone, otherwise it needs internet),
 // 2) Web Speech API inside the WebView, 3) clear message if unavailable.
 // The recognised text is NEVER saved directly: it is parsed into a draft in the form.
-function applyVoiceDraft(text){
+function applyVoiceDraft(text, srcLabel){
   var box=document.getElementById('voiceBox'); box.style.display='block';
   var r=parseVoice(text);
-  var html='<b>🎙️ النص المعترف به:</b> '+text+'<br>';
+  var html='<b>'+(srcLabel||'🎙️ النص المعترف به:')+'</b> '+text+'<br>';
   if(r.issues.length){ html+='<span style="color:#b42318"><b>⚠️ '+r.issues.join('<br>⚠️ ')+'</b></span><br>'; }
   if(r.type){ setType(r.type); }
   if(r.amount!==null){ document.getElementById('amount').value=r.amount; }
@@ -1144,6 +1144,15 @@ function applyVoiceDraft(text){
   html+='<span style="color:#0b6e4f"><b>✅ مسودة جاهزة للمراجعة:</b> '+(r.type==='income'?'قبض':r.type==='expense'?'دفع':'نوع غير معروف')+' • '+(r.amount!==null?r.amount+' '+(r.currency||''): 'مبلغ غير معروف')+' • تاريخ '+r.date+' — صحّح الحقول أعلاه ثم اضغط حفظ.</span>';
   box.innerHTML=html;
 }
+// ---- Shared receipt (Android ACTION_SEND, e.g. from Sham Cash) ----
+// The shared text is parsed into the same draft as voice input:
+// amount/type/currency/wallet pre-filled, user reviews and saves.
+// Nothing is ever saved automatically.
+window.applySharedText=function(text){
+  if(!text) return;
+  try{ window.switchTab('details'); }catch(e){}
+  applyVoiceDraft(text, '📩 النص المشارك من شام كاش:');
+};
 function voiceStatus(msg){ var box=document.getElementById('voiceBox'); box.style.display='block'; box.innerHTML=msg; }
 async function startVoice(){
   var mic=document.getElementById('micBtn');
