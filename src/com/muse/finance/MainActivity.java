@@ -36,6 +36,9 @@ public class MainActivity extends Activity {
     // Text shared to the app (e.g. a Sham Cash receipt): delivered to the
     // page as a draft after it loads, never saved directly.
     private String pendingSharedText;
+    // True when a receipt screenshot (image) was shared: the amount cannot
+    // be read from a picture, so the app opens with a hint instead.
+    private boolean pendingSharedImage;
     // File picker for the page's hidden file input (backup restore):
     // without this, tapping "restore" in a WebView does nothing at all.
     private ValueCallback<Uri[]> fileChooserCallback;
@@ -202,12 +205,14 @@ public class MainActivity extends Activity {
                     + "window.__voiceResult=function(t){var r=window.__voiceResolve;window.__voiceResolve=null;if(r)r({matches:[t]});};"
                     + "window.__voiceError=function(){var r=window.__voiceResolve;window.__voiceResolve=null;if(r)r({matches:[]});};"
                     + "window.__sharedText=function(t){if(window.applySharedText)window.applySharedText(t);};"
+                    + "window.__sharedImage=function(){if(window.applySharedImage)window.applySharedImage();};"
                     + "window.Capacitor={Plugins:{SpeechRecognition:{"
                     + "requestPermissions:function(){return Promise.resolve();},"
                     + "start:function(opts){return new Promise(function(res,rej){window.__voiceResolve=res;window.__voiceReject=rej;AndroidSpeech.start();});}"
                     + "}}};"
                     + "})();", null);
                 deliverSharedText();
+                deliverSharedImage();
             }
         });
 
@@ -278,13 +283,22 @@ public class MainActivity extends Activity {
         handleShareIntent(getIntent());
     }
 
-    // ACTION_SEND (text/plain) from another app, e.g. sharing a Sham Cash
-    // receipt. The text is queued and passed to the page once it loads;
-    // the page shows it as a draft for the user to confirm, never saves it.
+    // ACTION_SEND from another app, e.g. sharing a Sham Cash receipt.
+    // Text is queued and passed to the page once it loads; the page shows
+    // it as a draft for the user to confirm, never saves it. An image
+    // (receipt screenshot) cannot be read for an amount, so the app opens
+    // with a hint to enter the amount by voice or by hand.
     private void handleShareIntent(Intent intent) {
         if (intent == null) return;
         if (!Intent.ACTION_SEND.equals(intent.getAction())) return;
-        if (!"text/plain".equals(intent.getType())) return;
+        String type = intent.getType();
+        if (type == null) return;
+        if (type.startsWith("image/")) {
+            pendingSharedImage = true;
+            deliverSharedImage();
+            return;
+        }
+        if (!type.startsWith("text/")) return;
         String text = intent.getStringExtra(Intent.EXTRA_TEXT);
         if (text == null || text.trim().isEmpty()) return;
         pendingSharedText = text;
@@ -297,6 +311,14 @@ public class MainActivity extends Activity {
             String quoted = JSONObject.quote(pendingSharedText);
             pendingSharedText = null;
             webView.evaluateJavascript("window.__sharedText(" + quoted + ")", null);
+        } catch (Exception ignored) {}
+    }
+
+    private void deliverSharedImage() {
+        if (webView == null || !pendingSharedImage) return;
+        pendingSharedImage = false;
+        try {
+            webView.evaluateJavascript("window.__sharedImage()", null);
         } catch (Exception ignored) {}
     }
 

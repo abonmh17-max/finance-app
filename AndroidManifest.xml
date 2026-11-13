@@ -21,12 +21,16 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Share target: lets the user share a Sham Cash receipt (text)
-                 to this app; the amount is pre-filled as a draft to confirm. -->
+            <!-- Share target: lets the user share a Sham Cash receipt to
+                 this app; the amount is pre-filled as a draft to confirm.
+                 text/* covers plain text and HTML receipts; image/* covers
+                 receipt screenshots, which Sham Cash shares as images. -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
+                <data android:mimeType="text/*" />
+                <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
     </application>

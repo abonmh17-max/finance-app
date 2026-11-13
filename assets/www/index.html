@@ -1164,6 +1164,12 @@ window.applySharedText=function(text){
   try{ window.switchTab('details'); }catch(e){}
   applyVoiceDraft(text, '📩 النص المشارك من شام كاش:');
 };
+// A receipt shared as a picture (screenshot): no amount can be read from
+// it automatically, so open the entry form with a hint instead.
+window.applySharedImage=function(){
+  try{ window.switchTab('details'); }catch(e){}
+  voiceStatus('📷 شاركت صورة إيصال — لا يمكن قراءة المبلغ من الصورة تلقائياً. أدخل المبلغ يدوياً في الحقول أعلاه، أو اضغط زر الميكروفون وقل المبلغ بصوتك.');
+};
 function voiceStatus(msg){ var box=document.getElementById('voiceBox'); box.style.display='block'; box.innerHTML=msg; }
 async function startVoice(){
   var mic=document.getElementById('micBtn');
