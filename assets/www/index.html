@@ -1170,6 +1170,12 @@ window.applySharedImage=function(){
   try{ window.switchTab('details'); }catch(e){}
   voiceStatus('📷 شاركت صورة إيصال — لا يمكن قراءة المبلغ من الصورة تلقائياً. أدخل المبلغ يدوياً في الحقول أعلاه، أو اضغط زر الميكروفون وقل المبلغ بصوتك.');
 };
+// A receipt shared as a file (Sham Cash shares receipts as PDF): no amount
+// can be read from the file automatically, so open the entry form with a hint.
+window.applySharedFile=function(kind){
+  try{ window.switchTab('details'); }catch(e){}
+  voiceStatus('📄 شاركت ملف '+(kind||'PDF')+' — لا يمكن قراءة المبلغ من الملف تلقائياً. أدخل المبلغ يدوياً في الحقول أعلاه، أو اضغط زر الميكروفون وقل المبلغ بصوتك.');
+};
 function voiceStatus(msg){ var box=document.getElementById('voiceBox'); box.style.display='block'; box.innerHTML=msg; }
 async function startVoice(){
   var mic=document.getElementById('micBtn');

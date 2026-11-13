@@ -39,6 +39,8 @@ public class MainActivity extends Activity {
     // True when a receipt screenshot (image) was shared: the amount cannot
     // be read from a picture, so the app opens with a hint instead.
     private boolean pendingSharedImage;
+    // A receipt shared as a file (e.g. PDF): same idea — open with a hint.
+    private String pendingSharedFile;
     // File picker for the page's hidden file input (backup restore):
     // without this, tapping "restore" in a WebView does nothing at all.
     private ValueCallback<Uri[]> fileChooserCallback;
@@ -206,6 +208,7 @@ public class MainActivity extends Activity {
                     + "window.__voiceError=function(){var r=window.__voiceResolve;window.__voiceResolve=null;if(r)r({matches:[]});};"
                     + "window.__sharedText=function(t){if(window.applySharedText)window.applySharedText(t);};"
                     + "window.__sharedImage=function(){if(window.applySharedImage)window.applySharedImage();};"
+                    + "window.__sharedFile=function(t){if(window.applySharedFile)window.applySharedFile(t);};"
                     + "window.Capacitor={Plugins:{SpeechRecognition:{"
                     + "requestPermissions:function(){return Promise.resolve();},"
                     + "start:function(opts){return new Promise(function(res,rej){window.__voiceResolve=res;window.__voiceReject=rej;AndroidSpeech.start();});}"
@@ -213,6 +216,7 @@ public class MainActivity extends Activity {
                     + "})();", null);
                 deliverSharedText();
                 deliverSharedImage();
+                deliverSharedFile();
             }
         });
 
@@ -286,8 +290,9 @@ public class MainActivity extends Activity {
     // ACTION_SEND from another app, e.g. sharing a Sham Cash receipt.
     // Text is queued and passed to the page once it loads; the page shows
     // it as a draft for the user to confirm, never saves it. An image
-    // (receipt screenshot) cannot be read for an amount, so the app opens
-    // with a hint to enter the amount by voice or by hand.
+    // (receipt screenshot) or a file (e.g. a PDF receipt) cannot be read
+    // for an amount, so the app opens with a hint to enter it by voice
+    // or by hand.
     private void handleShareIntent(Intent intent) {
         if (intent == null) return;
         if (!Intent.ACTION_SEND.equals(intent.getAction())) return;
@@ -296,6 +301,11 @@ public class MainActivity extends Activity {
         if (type.startsWith("image/")) {
             pendingSharedImage = true;
             deliverSharedImage();
+            return;
+        }
+        if (type.equals("application/pdf") || type.startsWith("application/")) {
+            pendingSharedFile = type.equals("application/pdf") ? "PDF" : type;
+            deliverSharedFile();
             return;
         }
         if (!type.startsWith("text/")) return;
@@ -319,6 +329,15 @@ public class MainActivity extends Activity {
         pendingSharedImage = false;
         try {
             webView.evaluateJavascript("window.__sharedImage()", null);
+        } catch (Exception ignored) {}
+    }
+
+    private void deliverSharedFile() {
+        if (webView == null || pendingSharedFile == null) return;
+        try {
+            String quoted = JSONObject.quote(pendingSharedFile);
+            pendingSharedFile = null;
+            webView.evaluateJavascript("window.__sharedFile(" + quoted + ")", null);
         } catch (Exception ignored) {}
     }
 

@@ -24,13 +24,15 @@
             <!-- Share target: lets the user share a Sham Cash receipt to
                  this app; the amount is pre-filled as a draft to confirm.
                  text/* covers plain text and HTML receipts; image/* covers
-                 receipt screenshots, which Sham Cash shares as images. -->
+                 receipt screenshots; application/pdf covers receipts shared
+                 as PDF files, which is what Sham Cash actually shares. -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
                 <data android:mimeType="text/*" />
                 <data android:mimeType="image/*" />
+                <data android:mimeType="application/pdf" />
             </intent-filter>
         </activity>
     </application>
