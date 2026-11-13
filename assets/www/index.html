@@ -11,6 +11,33 @@ header{background:#0b6e4f;color:#fff;padding:16px 14px 12px;position:sticky;top:
 header h1{margin:0;font-size:20px}
 header p{margin:4px 0 0;font-size:13px;opacity:.9}
 main{padding:12px;max-width:900px;margin:0 auto;padding-bottom:40px}
+.hero{background:linear-gradient(135deg,#0aa58a 0%,#0b6e4f 55%,#084d38 100%);color:#fff;border-radius:18px;padding:18px 16px 12px;margin-bottom:12px;box-shadow:0 4px 14px rgba(11,110,79,.35)}
+.hero-head{display:flex;justify-content:space-between;align-items:flex-start}
+.hero-head h2{margin:0;font-size:19px}
+.hero-head p{margin:4px 0 0;font-size:12px;opacity:.85}
+.hero-eye{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:50%;width:42px;height:42px;font-size:20px;cursor:pointer;flex:none}
+.hero-cur{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 2px;border-top:1px solid rgba(255,255,255,.22)}
+.hero-cur:first-of-type{border-top:none}
+.hero-cur-name{font-size:15px;font-weight:700}
+.hero-cur-sub{font-size:12px;opacity:.85;margin-top:3px}
+.hero-cur-amt{font-size:22px;font-weight:800;white-space:nowrap;direction:ltr}
+.hero-cur-amt.neg{color:#ffd166}
+.hero-head-btns{display:flex;gap:8px;flex:none}
+.hero-tabs{display:flex;gap:6px;margin:14px 0 4px;flex-wrap:wrap}
+.hero-tab{flex:1;padding:9px 4px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.14);color:#fff;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.hero-tab.active{background:#fff;color:#0b6e4f;border-color:#fff}
+.hero-main{text-align:center;padding:10px 0 6px}
+.hero-main-label{font-size:14px;opacity:.9}
+.hero-main-amt{font-size:38px;font-weight:800;direction:ltr;line-height:1.2}
+.hero-main-amt.neg{color:#ffd166}
+.hero-main-sub{font-size:14px;opacity:.95;margin-top:4px}
+.hero-mini{margin-top:8px}
+.hero-mini .hero-cur{padding:9px 2px}
+.hero-mini .hero-cur-amt{font-size:17px}
+.hero-lockrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.hero-lockrow button{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer}
+.hero-lockrow button.linklike{background:none;border:none;text-decoration:underline;opacity:.9}
+.hero-note{font-size:11px;opacity:.8;margin:10px 0 0}
 .card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .card h2{margin:0 0 10px;font-size:17px}
 .tabs{display:flex;gap:8px;margin-bottom:10px}
@@ -56,6 +83,21 @@ input[type=date]{direction:ltr;text-align:right}
 <body>
 <header><h1>💰 تنظيم النفقات المالية</h1><p>قبض ودفع • كاش / شام كاش • يعمل دون إنترنت — البيانات محفوظة على جهازك فقط</p></header>
 <main>
+
+<div class="hero" id="heroBalance">
+<div class="hero-head">
+<div><h2>👛 رصيدي</h2><p>إجمالي رصيدك في كل العملات — يتحدث مع كل عملية</p></div>
+<div class="hero-head-btns">
+<button class="hero-eye" id="lockBtn" type="button" title="قفل / فتح الرصيد">🔓</button>
+<button class="hero-eye" id="eyeBtn" type="button" title="إظهار / إخفاء الأرصدة">👁️</button>
+</div>
+</div>
+<div class="hero-tabs" id="heroTabs"></div>
+<div class="hero-main" id="heroMain"></div>
+<div class="hero-mini" id="heroBalances"></div>
+<div class="hero-lockrow" id="heroLockRow"></div>
+<p class="hero-note">🔒 القفل شاشة خصوصية على جهازك فقط وليس حماية بنكية — الرقم محفوظ على جهازك، ومن يستطيع فتح هاتفك قد يصل للبيانات. «نسيت الرقم؟» يزيل القفل فقط ولا يحذف أي عملية.</p>
+</div>
 
 <div class="card">
 <h2>إضافة عملية جديدة</h2>
@@ -249,6 +291,14 @@ const WALLET={cash:'كاش',sham:'شام كاش'};
 const INC_CATS=['راتب','عمل حر','بيع','تحويل وارد','أخرى'];
 const EXP_CATS=['طعام','مواصلات','سكن','فواتير','صحة','تعليم','تسوق','أخرى'];
 let type='income', period='today';
+// Hero balance state (device only, localStorage): selected currency, eye hide, PIN lock.
+// The PIN is a privacy screen on this phone, NOT bank-grade security.
+let heroHidden=localStorage.getItem('finance_hero_hidden')==='1';
+let heroCur=localStorage.getItem('finance_hero_currency')||'SYP';
+if(!['SYP','USD','TRY','EUR'].includes(heroCur)) heroCur='SYP';
+let heroPin=localStorage.getItem('finance_hero_pin')||'';
+let heroLocked=!!heroPin && localStorage.getItem('finance_hero_locked')!=='0';
+function heroMasked(){ return heroHidden || heroLocked; }
 let txs=[];
 try{ txs=JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch(e){ txs=[]; }
 if(!Array.isArray(txs)) txs=[];
@@ -272,6 +322,34 @@ function inPeriod(dStr){
 }
 function periodName(){ return {today:'اليوم',week:'هذا الأسبوع (آخر 7 أيام)',month:'هذا الشهر',lastmonth:'الشهر الماضي',all:'كل الفترات'}[period]; }
 function render(){
+  // Hero balance (Sham Cash style): ONE big main balance with currency tabs,
+  // breakdown for the selected currency, compact totals for the other currencies.
+  // All totals come from the same txs (localStorage) as the rest of the app.
+  const bal=(c,w)=>{
+    const inc=txs.filter(t=>t.type==='income'&&t.currency===c&&(!w||t.wallet===w)).reduce((s,t)=>s+ +t.amount,0);
+    const exp=txs.filter(t=>t.type==='expense'&&t.currency===c&&(!w||t.wallet===w)).reduce((s,t)=>s+ +t.amount,0);
+    return inc-exp;
+  };
+  const show=n=> heroMasked() ? '••••••' : fmt(n);
+  const tabsEl=document.getElementById('heroTabs'), mainEl=document.getElementById('heroMain'), heroEl=document.getElementById('heroBalances'), lockRow=document.getElementById('heroLockRow');
+  if(tabsEl) tabsEl.innerHTML=Object.keys(CUR).map(c=>'<button type="button" class="hero-tab'+(c===heroCur?' active':'')+'" onclick="setHeroCur(\''+c+'\')">'+CUR[c]+'</button>').join('');
+  if(mainEl){
+    const total=bal(heroCur), cash=bal(heroCur,'cash'), sham=bal(heroCur,'sham');
+    mainEl.innerHTML='<div class="hero-main-label">رصيدك — '+CUR[heroCur]+'</div><div class="hero-main-amt'+(total<0?' neg':'')+'">'+show(total)+' '+heroCur+'</div>'+(heroLocked?'<div class="hero-main-sub">🔒 الرصيد مقفل — أدخل الرقم لعرض التفاصيل</div>':'<div class="hero-main-sub">💵 كاش: '+show(cash)+' • 📱 شام كاش: '+show(sham)+'</div>');
+  }
+  if(heroEl){
+    heroEl.innerHTML=Object.keys(CUR).filter(c=>c!==heroCur).map(c=>{
+      const total=bal(c);
+      return '<div class="hero-cur"><div class="hero-cur-name">'+CUR[c]+'</div><div class="hero-cur-amt'+(total<0?' neg':'')+'">'+show(total)+' '+c+'</div></div>';
+    }).join('');
+  }
+  if(lockRow){
+    if(heroLocked) lockRow.innerHTML='<button type="button" onclick="heroUnlock()">🔓 إدخال الرقم لعرض الرصيد</button><button type="button" class="linklike" onclick="heroForgotPin()">نسيت الرقم؟</button>';
+    else if(heroPin) lockRow.innerHTML='<button type="button" onclick="heroLockNow()">🔒 قفل الرصيد</button><button type="button" class="linklike" onclick="heroChangePin()">تغيير الرقم</button><button type="button" class="linklike" onclick="heroRemoveLock()">إزالة القفل</button>';
+    else lockRow.innerHTML='<button type="button" onclick="heroSetPin()">🔒 تعيين رقم للقفل</button>';
+  }
+  const lockBtn=document.getElementById('lockBtn'); if(lockBtn) lockBtn.textContent= heroLocked ? '🔒' : '🔓';
+  const eyeBtn=document.getElementById('eyeBtn'); if(eyeBtn) eyeBtn.textContent= heroHidden ? '🙈' : '👁️';
   // Summary per currency (all time)
   const el=document.getElementById('summary'); let html='';
   Object.keys(CUR).forEach(c=>{
@@ -441,6 +519,44 @@ async function startVoice(){
   voiceStatus('⚠️ التعرف الصوتي غير متوفر على هذا الجهاز/المتصفح. أدخل العملية يدوياً من الحقول أعلاه.');
 }
 document.getElementById('micBtn').onclick=startVoice;
+document.getElementById('eyeBtn').onclick=function(){ heroHidden=!heroHidden; localStorage.setItem('finance_hero_hidden', heroHidden?'1':'0'); render(); };
+document.getElementById('lockBtn').onclick=function(){ if(!heroPin) heroSetPin(); else if(heroLocked) heroUnlock(); else heroLockNow(); };
+// ---- Hero balance: currency tabs + PIN lock (privacy screen, device only) ----
+window.setHeroCur=function(c){ heroCur=c; localStorage.setItem('finance_hero_currency', c); render(); };
+function askPin(msg){ const p=prompt(msg); if(p===null) return null; return String(p).trim(); }
+function validPin(p){ return /^\d{4}$/.test(p||''); }
+window.heroSetPin=function(){
+  const p1=askPin('عيّن رقماً من 4 أرقام لقفل الرصيد:'); if(p1===null) return;
+  if(!validPin(p1)){ alert('الرقم يجب أن يكون 4 أرقام بالضبط.'); return; }
+  const p2=askPin('أعد إدخال الرقم للتأكيد:'); if(p2===null) return;
+  if(p1!==p2){ alert('الرقمان غير متطابقين — حاول مرة أخرى.'); return; }
+  heroPin=p1; heroLocked=true;
+  localStorage.setItem('finance_hero_pin', p1); localStorage.setItem('finance_hero_locked','1');
+  alert('تم تعيين الرقم وقفل الرصيد.'); render();
+};
+window.heroUnlock=function(){
+  const p=askPin('أدخل الرقم المكوّن من 4 أرقام لعرض الرصيد:'); if(p===null) return;
+  if(p===heroPin){ heroLocked=false; localStorage.setItem('finance_hero_locked','0'); render(); }
+  else alert('الرقم غير صحيح.');
+};
+window.heroLockNow=function(){ heroLocked=true; localStorage.setItem('finance_hero_locked','1'); render(); };
+window.heroChangePin=function(){
+  if(heroLocked){ alert('أدخل الرقم أولاً لفتح القفل.'); return; }
+  const p1=askPin('أدخل الرقم الجديد (4 أرقام):'); if(p1===null) return;
+  if(!validPin(p1)){ alert('الرقم يجب أن يكون 4 أرقام بالضبط.'); return; }
+  const p2=askPin('أعد إدخال الرقم الجديد للتأكيد:'); if(p2===null) return;
+  if(p1!==p2){ alert('الرقمان غير متطابقين — حاول مرة أخرى.'); return; }
+  heroPin=p1; localStorage.setItem('finance_hero_pin', p1); alert('تم تغيير الرقم.'); render();
+};
+window.heroRemoveLock=function(){
+  if(heroLocked){ alert('أدخل الرقم أولاً لفتح القفل.'); return; }
+  if(!confirm('إزالة القفل؟ ستبقى كل عملياتك وأرصدتك كما هي، ولن يُحذف شيء.')) return;
+  heroPin=''; heroLocked=false; localStorage.removeItem('finance_hero_pin'); localStorage.removeItem('finance_hero_locked'); render();
+};
+window.heroForgotPin=function(){
+  if(!confirm('نسيت الرقم؟ سيتم إزالة القفل فقط — لن تُحذف أي عملية أو رصيد. القفل شاشة خصوصية على جهازك وليس حماية بنكية. هل تريد إزالة القفل؟')) return;
+  heroPin=''; heroLocked=false; localStorage.removeItem('finance_hero_pin'); localStorage.removeItem('finance_hero_locked'); render();
+};
 setType('income'); render();
 </script>
 </body>
