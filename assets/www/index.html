@@ -657,8 +657,13 @@ function render(){
     if(!entries.length) return '<p class="empty">—</p>';
     return donutHTML(entries, kind==='expense'?'مصروف':'قبض');
   }
-  document.getElementById('spentByCat').innerHTML=byCat('expense');
-  document.getElementById('incByCat').innerHTML=byCat('income');
+  function walletSplit(kind){
+    const c=ptx.filter(t=>t.type===kind&&t.wallet==='cash').reduce((s,t)=>s+ +t.amount,0);
+    const sh=ptx.filter(t=>t.type===kind&&t.wallet==='sham').reduce((s,t)=>s+ +t.amount,0);
+    return '<div style="margin-top:8px"><div class="bar-row"><span>💵 من كاش</span><b>'+fmt(c)+'</b></div><div class="bar-row"><span>📱 من شام كاش</span><b>'+fmt(sh)+'</b></div></div>';
+  }
+  document.getElementById('spentByCat').innerHTML=byCat('expense')+walletSplit('expense');
+  document.getElementById('incByCat').innerHTML=byCat('income')+walletSplit('income');
   const wd=document.getElementById('walletDonut');
   if(wd){
     const cashRem=bal(heroCur,'cash'), shamRem=bal(heroCur,'sham');
