@@ -114,7 +114,7 @@ input[type=date]{direction:ltr;text-align:right}
 <div><label>المبلغ *</label><input id="amount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="مثال: 500000" required></div>
 <div><label>العملة *</label><select id="currency">
 <option value="SYP">ليرة سورية</option><option value="USD">دولار أمريكي</option>
-<option value="TRY">ليرة تركية</option><option value="EUR">يورو</option>
+<option value="EUR">يورو</option>
 </select></div>
 </div>
 <div class="row">
@@ -162,7 +162,7 @@ input[type=date]{direction:ltr;text-align:right}
 <select id="filterType"><option value="">كل الأنواع</option><option value="income">قبض</option><option value="expense">دفع</option></select>
 </div>
 <div class="search-row">
-<select id="filterCur"><option value="">كل العملات</option><option value="SYP">ليرة سورية</option><option value="USD">دولار</option><option value="TRY">ليرة تركية</option><option value="EUR">يورو</option></select>
+<select id="filterCur"><option value="">كل العملات</option><option value="SYP">ليرة سورية</option><option value="USD">دولار</option><option value="EUR">يورو</option></select>
 <select id="filterWallet"><option value="">كل المحافظ</option><option value="cash">كاش</option><option value="sham">شام كاش</option></select>
 </div>
 <div id="list"></div>
@@ -203,7 +203,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 <script>
 // Voice parser for the offline finance app — Arabic speech to transaction draft.
 // Pure logic, no network. Shared by index.html and the node test.
-// parseVoice(text) -> { type:'income'|'expense'|null, amount:number|null, currency:'SYP'|'USD'|'TRY'|'EUR'|null,
+// parseVoice(text) -> { type:'income'|'expense'|null, amount:number|null, currency:'SYP'|'USD'|'EUR'|null,
 //   wallet:'cash'|'sham'|null, category:string|null, desc:string, date:'YYYY-MM-DD', raw:text, issues:string[] }
 (function (root) {
   var AR_DIGITS = {'٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'};
@@ -228,7 +228,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     // ---- currency ----
     var currency = null;
     if (/(دولار|دولارات)/.test(tn)) currency = 'USD';
-    else if (/(ليره تركي|ليرة تركي|تركي|تركية)/.test(tn)) currency = 'TRY';
+    else if (/(ليره تركي|ليرة تركي|تركي|تركية)/.test(tn)) { currency = null; issues.push('الليرة التركية لم تعد مدعومة في التطبيق — اختر العملة يدوياً.'); }
     else if (/(يورو|اورو|أورو)/.test(tn)) currency = 'EUR';
     else if (/(ليره سوري|ليرة سوري|سوري|ليره|ليرة)/.test(tn)) currency = 'SYP';
     // ---- wallet ----
@@ -286,7 +286,9 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 </script>
 <script>
 const LS_KEY='finance_transactions_v1';
-const CUR={SYP:'ليرة سورية',USD:'دولار',TRY:'ليرة تركية',EUR:'يورو'};
+const CUR={SYP:'ليرة سورية',USD:'دولار',EUR:'يورو'};
+const CUR_OLD={TRY:'ليرة تركية (قديمة)'};
+function curName(c){ return CUR[c]||CUR_OLD[c]||c; }
 const WALLET={cash:'كاش',sham:'شام كاش'};
 const INC_CATS=['راتب','عمل حر','بيع','تحويل وارد','أخرى'];
 const EXP_CATS=['طعام','مواصلات','سكن','فواتير','صحة','تعليم','تسوق','أخرى'];
@@ -295,7 +297,7 @@ let type='income', period='today';
 // The PIN is a privacy screen on this phone, NOT bank-grade security.
 let heroHidden=localStorage.getItem('finance_hero_hidden')==='1';
 let heroCur=localStorage.getItem('finance_hero_currency')||'SYP';
-if(!['SYP','USD','TRY','EUR'].includes(heroCur)) heroCur='SYP';
+if(!['SYP','USD','EUR'].includes(heroCur)) heroCur='SYP';
 let heroPin=localStorage.getItem('finance_hero_pin')||'';
 let heroLocked=!!heroPin && localStorage.getItem('finance_hero_locked')!=='0';
 function heroMasked(){ return heroHidden || heroLocked; }
@@ -401,7 +403,7 @@ function render(){
   if(!shown.length){ list.innerHTML='<p class="empty">لا توجد حركات مطابقة.</p>'; return; }
   list.innerHTML=shown.map(t=>{
     const sign=t.type==='income'?'+':'−';
-    return '<div class="tx"><div class="top"><div><b>'+(t.type==='income'?'⬇ قبض':'⬆ دفع')+' — '+t.category+'</b><span class="date-badge">📅 '+t.date+'</span><div class="meta">'+t.desc+' • '+CUR[t.currency]+' • '+WALLET[t.wallet]+'</div>'+(t.note?'<div class="meta">📝 ملاحظات: '+t.note+'</div>':'')+'</div><div class="amt '+(t.type==='income'?'in':'out')+'">'+sign+' '+fmt(t.amount)+' '+t.currency+'</div></div><div class="actions"><button onclick="editTx(\''+t.id+'\')">✏️ تعديل</button><button onclick="delTx(\''+t.id+'\')">🗑️ حذف</button></div></div>';
+    return '<div class="tx"><div class="top"><div><b>'+(t.type==='income'?'⬇ قبض':'⬆ دفع')+' — '+t.category+'</b><span class="date-badge">📅 '+t.date+'</span><div class="meta">'+t.desc+' • '+curName(t.currency)+' • '+WALLET[t.wallet]+'</div>'+(t.note?'<div class="meta">📝 ملاحظات: '+t.note+'</div>':'')+'</div><div class="amt '+(t.type==='income'?'in':'out')+'">'+sign+' '+fmt(t.amount)+' '+t.currency+'</div></div><div class="actions"><button onclick="editTx(\''+t.id+'\')">✏️ تعديل</button><button onclick="delTx(\''+t.id+'\')">🗑️ حذف</button></div></div>';
   }).join('');
 }
 window.editTx=function(id){
@@ -442,7 +444,7 @@ function summaryRows(list){
 }
 function catRows(list, kind){
   const map={};
-  list.filter(t=>t.type===kind).forEach(t=>{ const k=t.category+' ('+CUR[t.currency]+')'; map[k]=(map[k]||0)+ +t.amount; });
+  list.filter(t=>t.type===kind).forEach(t=>{ const k=t.category+' ('+curName(t.currency)+')'; map[k]=(map[k]||0)+ +t.amount; });
   return Object.entries(map).map(([k,v])=>({ 'الفئة':k, 'المبلغ':v }));
 }
 document.getElementById('exportBtn').onclick=()=>{
@@ -450,7 +452,7 @@ document.getElementById('exportBtn').onclick=()=>{
   const q=(document.getElementById('search').value||'').trim();
   const ft=document.getElementById('filterType').value, fc=document.getElementById('filterCur').value, fw=document.getElementById('filterWallet').value;
   const shown=[...txs].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).filter(t=>{ if(ft&&t.type!==ft) return false; if(fc&&t.currency!==fc) return false; if(fw&&t.wallet!==fw) return false; if(q && !((t.desc||'')+' '+(t.category||'')+' '+(t.note||'')).includes(q)) return false; return true; });
-  const txRows=shown.map(t=>({ 'التاريخ':t.date, 'النوع':t.type==='income'?'قبض':'دفع', 'البيان':t.desc, 'الفئة':t.category, 'العملة':CUR[t.currency], 'المحفظة':WALLET[t.wallet], 'المبلغ':+t.amount, 'ملاحظات':t.note||'' }));
+  const txRows=shown.map(t=>({ 'التاريخ':t.date, 'النوع':t.type==='income'?'قبض':'دفع', 'البيان':t.desc, 'الفئة':t.category, 'العملة':curName(t.currency), 'المحفظة':WALLET[t.wallet], 'المبلغ':+t.amount, 'ملاحظات':t.note||'' }));
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(txRows.length?txRows:[{'التاريخ':'','النوع':'','البيان':'لا توجد حركات','الفئة':'','العملة':'','المحفظة':'','المبلغ':0,'ملاحظات':''}]), 'الحركات');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows(txs)), 'الملخص الكلي');
@@ -462,7 +464,7 @@ document.getElementById('exportBtn').onclick=()=>{
 };
 document.getElementById('exportCsv').onclick=()=>{
   const rows=[['التاريخ','النوع','البيان','الفئة','العملة','المحفظة','المبلغ','ملاحظات']];
-  [...txs].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).forEach(t=>rows.push([t.date,t.type==='income'?'قبض':'دفع',t.desc,t.category,CUR[t.currency],WALLET[t.wallet],t.amount,t.note||'']));
+  [...txs].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).forEach(t=>rows.push([t.date,t.type==='income'?'قبض':'دفع',t.desc,t.category,curName(t.currency),WALLET[t.wallet],t.amount,t.note||'']));
   const csv='\uFEFF'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download='finance-report.csv'; a.click();
 };
