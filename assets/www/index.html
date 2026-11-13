@@ -114,6 +114,9 @@ input[type=date]{direction:ltr;text-align:right}
 .bottomnav button.active{color:#0b6e4f}
 .bottomnav button .ic{display:block;font-size:22px;line-height:1.2}
 .bottomnav button span{display:block;font-size:12px;margin-top:2px;white-space:nowrap}
+.date-head{font-size:13px;font-weight:800;color:#0b4a6f;margin:14px 0 6px}
+.btn:active{transform:scale(.98)}
+.bottomnav button:active{background:#f0fdf4}
 .debt-due{color:#b42318;font-weight:800}
 
 </style>
@@ -138,6 +141,7 @@ input[type=date]{direction:ltr;text-align:right}
 <div class="hero-tabs" id="heroTabs"></div>
 <div class="hero-main" id="heroMain"></div>
 <div class="hero-mini" id="heroBalances"></div>
+<div class="hero-mini" id="heroDebts"></div>
 <div class="hero-lockrow" id="heroLockRow"></div>
 </div>
 </section>
@@ -195,6 +199,8 @@ input[type=date]{direction:ltr;text-align:right}
 <div id="spentByCat"></div>
 <h3>من أين قبضت؟</h3>
 <div id="incByCat"></div>
+<h3>توزيع الرصيد — كاش / شام كاش</h3>
+<div id="walletDonut"></div>
 </div>
 
 <div class="card">
@@ -553,6 +559,30 @@ function inPeriod(dStr){
   return true;
 }
 function periodName(){ return {today:'اليوم',week:'هذا الأسبوع (آخر 7 أيام)',month:'هذا الشهر',lastmonth:'الشهر الماضي',all:'كل الفترات'}[period]; }
+
+// ---- Donut charts (pure SVG, offline, no libraries) ----
+const DONUT_COLORS=['#0b6e4f','#0369a1','#7c3aed','#b45309','#b42318','#0e7490','#65a30d','#db2777'];
+function donutHTML(entries, centerLabel){
+  const total=entries.reduce(function(s,e){ return s+e[1]; },0);
+  if(!total) return '<p class="empty">—</p>';
+  const top=entries.slice(0,6);
+  const rest=entries.slice(6).reduce(function(s,e){ return s+e[1]; },0);
+  if(rest>0) top.push(['أخرى',rest]);
+  const R=60, C=2*Math.PI*R;
+  let off=0;
+  const segs=top.map(function(e,i){
+    const frac=e[1]/total, len=frac*C;
+    const s='<circle cx="70" cy="70" r="'+R+'" fill="none" stroke="'+DONUT_COLORS[i%DONUT_COLORS.length]+'" stroke-width="26" stroke-dasharray="'+len+' '+(C-len)+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 70 70)"/>';
+    off+=len;
+    return s;
+  }).join('');
+  const legend=top.map(function(e,i){
+    const pct=Math.round(e[1]/total*100);
+    return '<div class="bar-row"><span><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:'+DONUT_COLORS[i%DONUT_COLORS.length]+';margin-inline-end:6px"></i>'+e[0]+'</span><b>'+fmt(e[1])+' ('+pct+'%)</b></div>';
+  }).join('');
+  return '<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><svg width="140" height="140" viewBox="0 0 140 140">'+segs+'<text x="70" y="66" text-anchor="middle" font-size="16" font-weight="800" fill="#1a2530">'+fmt(total)+'</text><text x="70" y="84" text-anchor="middle" font-size="11" fill="#64748b">'+centerLabel+'</text></svg><div style="flex:1;min-width:160px">'+legend+'</div></div>';
+}
+
 function render(){
   // Hero balance (Sham Cash style): ONE big main balance with currency tabs,
   // breakdown for the selected currency, compact totals for the other currencies.
@@ -571,8 +601,8 @@ function render(){
   }
   if(heroEl){
     heroEl.innerHTML=Object.keys(CUR).filter(c=>c!==heroCur).map(c=>{
-      const total=bal(c);
-      return '<div class="hero-cur"><div class="hero-cur-name">'+CUR[c]+'</div><div class="hero-cur-amt'+(total<0?' neg':'')+'">'+show(total)+' '+c+'</div></div>';
+      const total=bal(c), cash=bal(c,'cash'), sham=bal(c,'sham');
+      return '<div class="hero-cur"><div><div class="hero-cur-name">'+CUR[c]+'</div><div class="hero-cur-sub">💵 كاش: '+show(cash)+' • 📱 شام كاش: '+show(sham)+'</div></div><div class="hero-cur-amt'+(total<0?' neg':'')+'">'+show(total)+' '+c+'</div></div>';
     }).join('');
   }
   if(lockRow){
@@ -597,7 +627,9 @@ function render(){
   Object.keys(CUR).forEach(c=>{
     const inc=txs.filter(t=>t.type==='income'&&t.currency===c).reduce((s,t)=>s+ +t.amount,0);
     const exp=txs.filter(t=>t.type==='expense'&&t.currency===c).reduce((s,t)=>s+ +t.amount,0);
-    html+='<div class="sum"><h3>'+CUR[c]+'</h3><div class="big rem">المتبقي: '+fmt(inc-exp)+'</div><small class="inc">⬇ قبض: '+fmt(inc)+'</small><small class="exp">⬆ أنفقت: '+fmt(exp)+'</small></div>';
+    const cashRem=txs.filter(t=>t.currency===c&&t.wallet==='cash').reduce((s,t)=>s+(t.type==='income'?+t.amount:-+t.amount),0);
+    const shamRem=txs.filter(t=>t.currency===c&&t.wallet==='sham').reduce((s,t)=>s+(t.type==='income'?+t.amount:-+t.amount),0);
+    html+='<div class="sum"><h3>'+CUR[c]+'</h3><div class="big rem">المتبقي: '+fmt(inc-exp)+'</div><small class="inc">⬇ قبض: '+fmt(inc)+'</small><small class="exp">⬆ أنفقت: '+fmt(exp)+'</small><small>💵 كاش: '+fmt(cashRem)+'</small><small>📱 شام كاش: '+fmt(shamRem)+'</small></div>';
   });
   el.innerHTML=html;
   let wh='';
@@ -620,17 +652,24 @@ function render(){
   });
   document.getElementById('report').innerHTML= rh||'<p class="empty">لا حركات في هذه الفترة.</p>';
   function byCat(kind){
-    const map={}; ptx.filter(t=>t.type===kind).forEach(t=>{ map[t.category]=(map[t.category]||0)+ +t.amount; });
+    const map={}; ptx.filter(t=>t.type===kind).forEach(t=>{ const k=t.category+' ('+curName(t.currency)+')'; map[k]=(map[k]||0)+ +t.amount; });
     const entries=Object.entries(map).sort((a,b)=>b[1]-a[1]);
     if(!entries.length) return '<p class="empty">—</p>';
-    const max=entries[0][1];
-    return entries.map(([k,v])=>{
-      // currency shown in title only when single currency; keep amounts grouped by category across currencies is ambiguous, so list per category+currency below
-      return '<div class="bar-row"><span>'+k+'</span><b>'+fmt(v)+'</b></div><div class="bar '+(kind==='expense'?'exp':'')+'"><i style="width:'+Math.round(v/max*100)+'%"></i></div>';
-    }).join('');
+    return donutHTML(entries, kind==='expense'?'مصروف':'قبض');
   }
   document.getElementById('spentByCat').innerHTML=byCat('expense');
   document.getElementById('incByCat').innerHTML=byCat('income');
+  const wd=document.getElementById('walletDonut');
+  if(wd){
+    const cashRem=bal(heroCur,'cash'), shamRem=bal(heroCur,'sham');
+    wd.innerHTML=donutHTML([['💵 كاش',Math.max(0,cashRem)],['📱 شام كاش',Math.max(0,shamRem)]], CUR[heroCur]);
+  }
+  const heroDebt=document.getElementById('heroDebts');
+  if(heroDebt){
+    const owedD=debts.filter(function(d){ return d.type==='owed'&&d.currency===heroCur; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
+    const oweD=debts.filter(function(d){ return d.type==='owe'&&d.currency===heroCur; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
+    heroDebt.innerHTML=(owedD||oweD)?'<div class="hero-cur"><div class="hero-cur-name">💳 الديون — '+CUR[heroCur]+'</div><div class="hero-cur-sub">لي: '+show(owedD)+' • عليّ: '+show(oweD)+'</div></div>':'';
+  }
   // List (search + filters)
   const q=(document.getElementById('search').value||'').trim();
   const ft=document.getElementById('filterType').value, fc=document.getElementById('filterCur').value, fw=document.getElementById('filterWallet').value;
@@ -641,9 +680,12 @@ function render(){
   });
   const list=document.getElementById('list');
   if(!shown.length){ list.innerHTML='<p class="empty">لا توجد حركات مطابقة.</p>'; return; }
+  let prevDate='';
   list.innerHTML=shown.map(t=>{
     const sign=t.type==='income'?'+':'−';
-    return '<div class="tx"><div class="top"><div><b>'+(t.type==='income'?'⬇ قبض':'⬆ دفع')+' — '+t.category+'</b><span class="date-badge">📅 '+t.date+'</span><div class="meta">'+t.desc+' • '+curName(t.currency)+' • '+WALLET[t.wallet]+'</div>'+(t.note?'<div class="meta">📝 ملاحظات: '+t.note+'</div>':'')+'</div><div class="amt '+(t.type==='income'?'in':'out')+'">'+sign+' '+fmt(t.amount)+' '+t.currency+'</div></div><div class="actions"><button onclick="editTx(\''+t.id+'\')">✏️ تعديل</button><button onclick="delTx(\''+t.id+'\')">🗑️ حذف</button></div></div>';
+    const head=(t.date!==prevDate)?'<div class="date-head">📅 '+t.date+'</div>':'';
+    prevDate=t.date;
+    return head+'<div class="tx"><div class="top"><div><b>'+(t.type==='income'?'⬇ قبض':'⬆ دفع')+' — '+t.category+'</b><span class="date-badge">📅 '+t.date+'</span><div class="meta">'+t.desc+' • '+curName(t.currency)+' • '+WALLET[t.wallet]+'</div>'+(t.note?'<div class="meta">📝 ملاحظات: '+t.note+'</div>':'')+'</div><div class="amt '+(t.type==='income'?'in':'out')+'">'+sign+' '+fmt(t.amount)+' '+t.currency+'</div></div><div class="actions"><button onclick="editTx(\''+t.id+'\')">✏️ تعديل</button><button onclick="delTx(\''+t.id+'\')">🗑️ حذف</button></div></div>';
   }).join('');
 }
 window.editTx=function(id){
@@ -715,7 +757,11 @@ function renderDebts(){
     const cls=d.type==='owed'?'in':'out';
     const badge=st==='paid'?'✅ مسدد بالكامل':(st==='partial'?'🟡 مسدد جزئياً':'🔴 قائم');
     const overdue=(d.due && st!=='paid' && d.due<todayISO());
-    const style=overdue?' style="border-color:#b42318;background:#fef2f2"':'';
+    let style='';
+    if(st==='paid') style=' style="background:#f1f5f9;border-color:#cbd5e1"';
+    else if(d.type==='owed') style=' style="background:#e8f8f1;border-color:#34a97b"';
+    else style=' style="background:#fdf0ef;border-color:#e8a49e"';
+    if(overdue) style=' style="background:#fdecea;border-color:#b42318"';
     return '<div class="tx"'+style+'><div class="top"><div><b>'+label+' — '+escAttr(d.person)+'</b><span class="date-badge">📅 '+d.date+'</span><div class="meta">'+badge+' • '+curName(d.currency)+debtDueInfo(d)+'</div><div class="meta">المبلغ: '+fmt(d.amount)+' '+d.currency+' • المسدد: '+fmt(d.paid||0)+' • المتبقي: '+fmt(rem)+'</div>'+(d.note?'<div class="meta">📝 '+escAttr(d.note)+'</div>':'')+'</div><div class="amt '+cls+'">'+fmt(rem)+' '+d.currency+'</div></div><div class="actions">'+(st!=='paid'?'<button onclick="debtPay(\''+d.id+'\')">💰 تسجيل دفعة</button><button onclick="debtSettle(\''+d.id+'\')">✅ تسديد كامل</button>':'')+'<button onclick="editDebt(\''+d.id+'\')">✏️ تعديل</button><button onclick="delDebt(\''+d.id+'\')">🗑️ حذف</button></div></div>';
   }).join('');
 }
