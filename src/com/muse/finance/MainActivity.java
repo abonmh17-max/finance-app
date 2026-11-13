@@ -246,6 +246,12 @@ public class MainActivity extends Activity {
                                         long contentLength) {
                 String filename = "finance-report.xlsx";
                 if (mimetype != null && mimetype.contains("csv")) filename = "finance-report.csv";
+                else if (mimetype != null && mimetype.contains("json")) {
+                    // A JSON blob is a backup: never save it as finance-report.xlsx.
+                    java.text.SimpleDateFormat df = new java.text.SimpleDateFormat(
+                            "yyyy-MM-dd", java.util.Locale.US);
+                    filename = "finance-backup-" + df.format(new java.util.Date()) + ".json";
+                }
                 else if (contentDisposition != null && contentDisposition.contains("filename=")) {
                     filename = contentDisposition.replaceAll(".*filename=\"?([^\";]+)\"?.*", "$1").trim();
                 }

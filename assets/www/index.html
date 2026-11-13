@@ -1040,8 +1040,19 @@ function backupSettings(){
   };
 }
 function downloadTextFile(filename, text, mime){
-  // Same blob-download path as the CSV export: in the Android app the
-  // WebView DownloadListener / AndroidSaver bridge saves it to Downloads.
+  // In the Android app, save directly through the native bridge with the
+  // EXACT filename. The WebView DownloadListener cannot see the <a download>
+  // attribute, so it used to save every blob as finance-report.xlsx —
+  // including JSON backups (that is why backups appeared as Excel files).
+  if(window.AndroidSaver){
+    try{
+      var bytes=new TextEncoder().encode(text);
+      var bin=''; var CH=0x8000;
+      for(var i=0;i<bytes.length;i+=CH){bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+CH));}
+      AndroidSaver.saveBase64(btoa(bin), filename);
+      return;
+    }catch(e){ /* fall through to the browser download */ }
+  }
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([text],{type:mime||'application/json;charset=utf-8'}));
   a.download=filename; a.click();
