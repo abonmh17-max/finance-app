@@ -88,6 +88,12 @@ input[type=date]{direction:ltr;text-align:right}
 .search-row{display:flex;gap:8px;margin-bottom:8px}
 .search-row input,.search-row select{font-size:14px;padding:9px}
 .hint{font-size:12px;color:#64748b;margin-top:6px}
+.chip-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;padding:6px 10px;font-size:14px;color:#334155}
+.chip button{border:none;background:none;color:#b42318;font-weight:800;cursor:pointer;font-size:15px;padding:0;line-height:1}
+.cat-input-row{display:flex;gap:8px;margin-top:8px}
+.cat-input-row input{flex:1;min-width:0}
+.cat-input-row button{width:auto;margin-top:0;white-space:nowrap}
 .info-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-width:24px;border-radius:50%;border:1.5px solid #94a3b8;background:#fff;color:#64748b;font-size:15px;font-weight:800;line-height:1;cursor:pointer;vertical-align:middle;padding:0}
 .hero .info-btn{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.5);color:#fff}
 #infoPop{position:fixed;bottom:78px;inset-inline:12px;z-index:60;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.25);font-size:14px;line-height:1.8;color:#334155}
@@ -200,6 +206,22 @@ input[type=date]{direction:ltr;text-align:right}
 <p class="hint" id="settingsLockStatus" style="font-size:14px;color:#334155"></p>
 <div id="settingsLockBtns" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
 </div>
+<div class="card">
+<h2>🏷️ الفئات <button class="info-btn" type="button" title="ما هي الفئات؟" data-info="أضف فئاتك الخاصة للقبض والمصروف، وستظهر فوراً في قائمة الفئات عند إضافة عملية جديدة، وفي تقرير «أين أنفقت؟». حذف فئة مستخدمة في حركات سابقة لا يحذف تلك الحركات — حركاتك القديمة تحتفظ باسم الفئة، لكن الفئة لن تظهر بعد الآن عند إضافة حركة جديدة.">ⓘ</button></h2>
+<h3>فئات المصروف</h3>
+<div class="chip-list" id="expCatList"></div>
+<div class="cat-input-row"><input id="newExpCat" type="text" placeholder="فئة مصروف جديدة — مثال: ملابس" maxlength="30"><button class="btn secondary" id="addExpCat" type="button">➕ إضافة</button></div>
+<h3 style="margin-top:14px">فئات القبض</h3>
+<div class="chip-list" id="incCatList"></div>
+<div class="cat-input-row"><input id="newIncCat" type="text" placeholder="فئة قبض جديدة — مثال: مساعدات" maxlength="30"><button class="btn secondary" id="addIncCat" type="button">➕ إضافة</button></div>
+</div>
+<div class="card">
+<h2>💱 العملات <button class="info-btn" type="button" title="ما هي العملات؟" data-info="أضف عملاتك الخاصة، وستظهر فوراً في بطاقة الرصيد، وفي قائمة العملة عند إضافة عملية، وفي الأرصدة والتقارير. حذف عملة مستخدمة في حركات سابقة لا يحذف تلك الحركات — تبقى محفوظة وظاهرة في السجل بعملتها القديمة، لكنها لا تُحسب في الأرصدة والتقارير الجديدة. لا يمكن حذف آخر عملة — يجب أن تبقى عملة واحدة على الأقل.">ⓘ</button></h2>
+<div class="chip-list" id="curList"></div>
+<div style="margin-top:10px"><input id="newCurName" type="text" placeholder="اسم العملة — مثال: جنيه إسترليني" maxlength="30"></div>
+<div class="cat-input-row"><input id="newCurCode" type="text" placeholder="الرمز — مثال: GBP" maxlength="3"><input id="newCurSymbol" type="text" placeholder="الإشارة — مثال: £" maxlength="4"></div>
+<button class="btn secondary" id="addCur" type="button">➕ إضافة عملة</button>
+</div>
 <div class="card" style="border:2px solid #0b6e4f;background:#ecfdf5">
 <h2 style="margin-top:0">💾 النسخة الاحتياطية والاستعادة <button class="info-btn" type="button" title="ما هي النسخة الاحتياطية؟" data-info="احفظ نسخة من كل حركاتك وإعداداتك في ملف واحد، واستعدها في أي وقت — قبل إعادة تثبيت التطبيق أو تغيير الهاتف. النسخة الاحتياطية ملف واحد يشمل كل حركاتك وإعداداتك (العملة المختارة، الإخفاء، القفل والرقم، آخر تبويب). احتفظ به في مكان آمن — فهو يحتوي كل بياناتك، ومنه تستعيد كل شيء بعد إعادة تثبيت التطبيق. الاستعادة تستبدل كل الحركات الحالية بعد تأكيدك.">ⓘ</button></h2>
 <div style="display:flex;gap:10px;margin-top:12px">
@@ -293,7 +315,14 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     else if (/(قبل يومين)/.test(tn)) date = todayISO(-2);
     // ---- currency ----
     var currency = null;
-    if (/(دولار|دولارات)/.test(tn)) currency = 'USD';
+    // Custom currencies added by the user in Settings: match by their Arabic name.
+    if (typeof curs !== 'undefined' && Array.isArray(curs)) {
+      for (var ci = 0; ci < curs.length; ci++) {
+        var cn = normAlef(String(curs[ci].name || ''));
+        if (cn && cn.length >= 2 && tn.indexOf(cn) !== -1) { currency = curs[ci].code; break; }
+      }
+    }
+    if (!currency && /(دولار|دولارات)/.test(tn)) currency = 'USD';
     else if (/(ليره تركي|ليرة تركي|تركي|تركية)/.test(tn)) { currency = null; issues.push('الليرة التركية لم تعد مدعومة في التطبيق — اختر العملة يدوياً.'); }
     else if (/(يورو|اورو|أورو)/.test(tn)) currency = 'EUR';
     else if (/(ليره سوري|ليرة سوري|سوري|ليره|ليرة)/.test(tn)) currency = 'SYP';
@@ -340,6 +369,14 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     var expMap = [['طعام', 'طعام'], ['اكل', 'طعام'], ['خضار', 'طعام'], ['سوق', 'طعام'], ['مواصلات', 'مواصلات'], ['بنزين', 'مواصلات'], ['تكسي', 'مواصلات'], ['سرفيس', 'مواصلات'], ['سكن', 'سكن'], ['ايجار', 'سكن'], ['اجار', 'سكن'], ['فواتير', 'فواتير'], ['كهربا', 'فواتير'], ['كهرباء', 'فواتير'], ['ماء', 'فواتير'], ['انترنت', 'فواتير'], ['صحه', 'صحة'], ['دواء', 'صحة'], ['طبيب', 'صحة'], ['تعليم', 'تعليم'], ['مدرسه', 'تعليم'], ['تسوق', 'تسوق']];
     var map = type === 'income' ? incMap.concat(expMap) : expMap.concat(incMap);
     for (var i = 0; i < map.length; i++) { if (tn.indexOf(map[i][0]) !== -1) { category = map[i][1]; break; } }
+    // Custom categories added by the user in Settings: match by their Arabic name.
+    if (!category && typeof incCats !== 'undefined' && typeof expCats !== 'undefined') {
+      var catList = (type === 'income' ? incCats : expCats);
+      for (var k = 0; k < catList.length; k++) {
+        var cname = normAlef(String(catList[k]));
+        if (cname && cname.length >= 2 && tn.indexOf(cname) !== -1) { category = catList[k]; break; }
+      }
+    }
     var desc = rest || (category || '');
     if (!desc && category) desc = category;
     return { type: type, amount: amount, currency: currency, wallet: wallet, category: category, desc: desc, date: date, raw: raw, issues: issues };
@@ -352,18 +389,43 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 </script>
 <script>
 const LS_KEY='finance_transactions_v1';
-const CUR={SYP:'ليرة سورية',USD:'دولار',EUR:'يورو'};
+// Currencies (user-editable in Settings, device only): name + 3-letter code + symbol.
+// CUR is rebuilt from `curs` whenever the list changes, so hero tabs, balances,
+// report and export all read the same list. Old TRY transactions stay stored
+// and listed (CUR_OLD) but are excluded from new totals.
+const DEF_CURS=[{name:'ليرة سورية',code:'SYP',symbol:'ل.س'},{name:'دولار',code:'USD',symbol:'$'},{name:'يورو',code:'EUR',symbol:'€'}];
+function validCurs(v){
+  if(!Array.isArray(v)) return null;
+  const ok=v.filter(c=>c&&typeof c.name==='string'&&c.name.trim()&&typeof c.code==='string'&&/^[A-Za-z]{3}$/.test(c.code.trim())).map(c=>({name:c.name.trim(),code:c.code.trim().toUpperCase(),symbol:typeof c.symbol==='string'?c.symbol.trim().slice(0,4):''}));
+  const seen={}; const dd=ok.filter(c=>{ if(seen[c.code]) return false; seen[c.code]=1; return true; });
+  return dd.length?dd:null;
+}
+function loadCurs(){ try{ const v=validCurs(JSON.parse(localStorage.getItem('finance_currencies')||'null')); if(v) return v; }catch(e){} return DEF_CURS.map(c=>({name:c.name,code:c.code,symbol:c.symbol})); }
+let curs=loadCurs();
+const CUR={};
+function rebuildCUR(){ Object.keys(CUR).forEach(k=>delete CUR[k]); curs.forEach(c=>{ CUR[c.code]=c.name; }); }
+rebuildCUR();
+function saveCurs(){ localStorage.setItem('finance_currencies', JSON.stringify(curs)); rebuildCUR(); }
 const CUR_OLD={TRY:'ليرة تركية (قديمة)'};
 function curName(c){ return CUR[c]||CUR_OLD[c]||c; }
 const WALLET={cash:'كاش',sham:'شام كاش'};
-const INC_CATS=['راتب','عمل حر','بيع','تحويل وارد','أخرى'];
-const EXP_CATS=['طعام','مواصلات','سكن','فواتير','صحة','تعليم','تسوق','أخرى'];
+// Categories (user-editable in Settings, device only).
+const DEF_INC_CATS=['راتب','عمل حر','بيع','تحويل وارد','أخرى'];
+const DEF_EXP_CATS=['طعام','مواصلات','سكن','فواتير','صحة','تعليم','تسوق','أخرى'];
+function loadCats(kind){
+  try{ const v=JSON.parse(localStorage.getItem('finance_cats_'+kind)||'null');
+    if(Array.isArray(v)){ const ok=v.map(x=>typeof x==='string'?x.trim():'').filter(x=>x); if(ok.length) return Array.from(new Set(ok)); } }catch(e){}
+  return kind==='income'?DEF_INC_CATS.slice():DEF_EXP_CATS.slice();
+}
+let incCats=loadCats('income'), expCats=loadCats('expense');
+function saveCats(kind){ localStorage.setItem('finance_cats_'+kind, JSON.stringify(kind==='income'?incCats:expCats)); }
+function validCats(v){ if(!Array.isArray(v)) return null; const ok=v.map(x=>typeof x==='string'?x.trim():'').filter(x=>x); return ok.length?Array.from(new Set(ok)):null; }
 let type='income', period='today';
 // Hero balance state (device only, localStorage): selected currency, eye hide, PIN lock.
 // The PIN is a privacy screen on this phone, NOT bank-grade security.
 let heroHidden=localStorage.getItem('finance_hero_hidden')==='1';
 let heroCur=localStorage.getItem('finance_hero_currency')||'SYP';
-if(!['SYP','USD','EUR'].includes(heroCur)) heroCur='SYP';
+if(!CUR[heroCur]) heroCur=Object.keys(CUR)[0];
 let heroPin=localStorage.getItem('finance_hero_pin')||'';
 let heroLocked=!!heroPin && localStorage.getItem('finance_hero_locked')!=='0';
 // Bottom tabs (Home / Details / Settings): remember last active tab, device only.
@@ -406,7 +468,7 @@ if(!Array.isArray(txs)) txs=[];
 function todayISO(){ const d=new Date(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return d.getFullYear()+'-'+m+'-'+day; }
 function fmt(n){ return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2}); }
 function save(){ localStorage.setItem(LS_KEY, JSON.stringify(txs)); }
-function setCats(){ const s=document.getElementById('category'); const list= type==='income'?INC_CATS:EXP_CATS; s.innerHTML=list.map(c=>'<option>'+c+'</option>').join(''); document.getElementById('catLabel').textContent= type==='income'?'نوع القبض *':'نوع الدفع / فئة المصروف *'; document.getElementById('saveBtn').textContent= document.getElementById('editId').value? '💾 حفظ التعديل' : (type==='income'?'💾 حفظ القبض':'💾 حفظ الدفع'); document.getElementById('saveBtn').className='btn'+(type==='expense'?' exp':''); }
+function setCats(){ const s=document.getElementById('category'); let list= type==='income'?incCats.slice():expCats.slice(); const eid=document.getElementById('editId').value; if(eid){ const t=txs.find(x=>x.id===eid); if(t && t.category && !list.includes(t.category)) list.push(t.category); } s.innerHTML=list.map(c=>'<option>'+c+'</option>').join(''); document.getElementById('catLabel').textContent= type==='income'?'نوع القبض *':'نوع الدفع / فئة المصروف *'; document.getElementById('saveBtn').textContent= document.getElementById('editId').value? '💾 حفظ التعديل' : (type==='income'?'💾 حفظ القبض':'💾 حفظ الدفع'); document.getElementById('saveBtn').className='btn'+(type==='expense'?' exp':''); }
 function setType(t){ type=t; document.getElementById('tabInc').className= t==='income'?'active-inc':''; document.getElementById('tabExp').className= t==='expense'?'active-exp':''; setCats(); }
 document.getElementById('tabInc').onclick=()=>setType('income');
 document.getElementById('tabExp').onclick=()=>setType('expense');
@@ -457,6 +519,8 @@ function render(){
     else if(heroLocked) slb.innerHTML='<button type="button" class="btn" onclick="heroUnlock()" style="flex:1">🔓 إدخال الرقم لفتح الرصيد</button><button type="button" class="btn secondary" onclick="heroForgotPin()" style="flex:1">نسيت الرقم؟</button>';
     else slb.innerHTML='<button type="button" class="btn" onclick="heroLockNow()" style="flex:1">🔒 قفل الرصيد الآن</button><button type="button" class="btn secondary" onclick="heroChangePin()" style="flex:1">تغيير الرقم</button><button type="button" class="btn" onclick="heroRemoveLock()" style="flex:1;background:#b42318">🗑️ إزالة القفل</button>';
   }
+  // Settings tab: editable categories + currencies lists, and currency dropdowns
+  syncCurrencySelects(); renderCatLists(); renderCurList();
   const lockBtn=document.getElementById('lockBtn'); if(lockBtn) lockBtn.textContent= heroLocked ? '🔒' : '🔓';
   const eyeBtn=document.getElementById('eyeBtn'); if(eyeBtn) eyeBtn.textContent= heroHidden ? '🙈' : '👁️';
   // Summary per currency (all time)
@@ -576,6 +640,78 @@ document.getElementById('exportCsv').onclick=()=>{
   const csv='\uFEFF'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download='finance-report.csv'; a.click();
 };
+// ---- Settings: editable categories + currencies (device only, localStorage) ----
+function escAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function syncCurrencySelects(){
+  const cur=document.getElementById('currency'); if(cur){ const prev=cur.value; cur.innerHTML=curs.map(c=>'<option value="'+c.code+'">'+c.name+'</option>').join(''); if(CUR[prev]) cur.value=prev; }
+  const fc=document.getElementById('filterCur'); if(fc){ const fprev=fc.value; fc.innerHTML='<option value="">كل العملات</option>'+curs.map(c=>'<option value="'+c.code+'">'+c.name+'</option>').join(''); if(fprev==='' || CUR[fprev]) fc.value=fprev; }
+}
+function renderCatLists(){
+  function html(kind, arr){
+    if(!arr.length) return '<span class="empty" style="padding:4px 0">لا فئات.</span>';
+    return arr.map(function(c){
+      const n=txs.filter(t=>t.category===c).length;
+      return '<span class="chip">'+c+(n?' <small style="color:#64748b">('+n+')</small>':'')+' <button type="button" data-cat-kind="'+kind+'" data-cat-name="'+escAttr(c)+'" title="حذف الفئة">✕</button></span>';
+    }).join('');
+  }
+  const e=document.getElementById('expCatList'); if(e) e.innerHTML=html('expense', expCats);
+  const i=document.getElementById('incCatList'); if(i) i.innerHTML=html('income', incCats);
+}
+function renderCurList(){
+  const el=document.getElementById('curList'); if(!el) return;
+  el.innerHTML=curs.map(function(c){
+    const n=txs.filter(t=>t.currency===c.code).length;
+    return '<span class="chip">'+c.name+' • '+c.code+(c.symbol?' '+c.symbol:'')+(n?' <small style="color:#64748b">('+n+')</small>':'')+' <button type="button" data-cur-code="'+c.code+'" title="حذف العملة">✕</button></span>';
+  }).join('');
+}
+function addCat(kind){
+  const inp=document.getElementById(kind==='expense'?'newExpCat':'newIncCat');
+  const name=inp.value.trim();
+  if(!name){ alert('اكتب اسم الفئة أولاً.'); return; }
+  const arr=kind==='expense'?expCats:incCats;
+  if(arr.includes(name)){ alert('هذه الفئة موجودة بالفعل.'); return; }
+  arr.push(name); saveCats(kind); inp.value=''; setCats(); render();
+}
+function delCat(kind, name){
+  const arr=kind==='expense'?expCats:incCats;
+  const used=txs.filter(t=>t.category===name).length;
+  if(used && !confirm('هذه الفئة مستخدمة في '+used+' حركة سابقة. الحركات القديمة ستحتفظ باسم الفئة، لكن الفئة لن تظهر بعد الآن عند إضافة حركة جديدة. هل تريد حذفها؟')) return;
+  const idx=arr.indexOf(name); if(idx<0) return;
+  arr.splice(idx,1); saveCats(kind); setCats(); render();
+}
+function addCur(){
+  const name=document.getElementById('newCurName').value.trim();
+  const code=document.getElementById('newCurCode').value.trim().toUpperCase();
+  const symbol=document.getElementById('newCurSymbol').value.trim();
+  if(!name){ alert('اكتب اسم العملة أولاً.'); return; }
+  if(!/^[A-Za-z]{3}$/.test(code)){ alert('رمز العملة يجب أن يكون 3 أحرف إنجليزية — مثال: GBP.'); return; }
+  if(curs.some(c=>c.code===code)){ alert('هذه العملة موجودة بالفعل (نفس الرمز).'); return; }
+  curs.push({name:name,code:code,symbol:symbol.slice(0,4)}); saveCurs();
+  document.getElementById('newCurName').value=''; document.getElementById('newCurCode').value=''; document.getElementById('newCurSymbol').value='';
+  syncCurrencySelects(); render();
+}
+function delCur(code){
+  if(curs.length<=1){ alert('لا يمكن حذف آخر عملة — يجب أن تبقى عملة واحدة على الأقل.'); return; }
+  const c=curs.find(x=>x.code===code); if(!c) return;
+  const used=txs.filter(t=>t.currency===code).length;
+  if(used && !confirm('هذه العملة مستخدمة في '+used+' حركة سابقة. الحركات القديمة ستبقى محفوظة وظاهرة في السجل بعملتها القديمة، لكنها لن تُحسب في الأرصدة والتقارير الجديدة. هل تريد حذفها؟')) return;
+  curs=curs.filter(x=>x.code!==code); saveCurs();
+  if(heroCur===code){ heroCur=Object.keys(CUR)[0]; localStorage.setItem('finance_hero_currency', heroCur); }
+  syncCurrencySelects(); render();
+}
+document.getElementById('addExpCat').onclick=function(){ addCat('expense'); };
+document.getElementById('addIncCat').onclick=function(){ addCat('income'); };
+document.getElementById('addCur').onclick=addCur;
+['expCatList','incCatList'].forEach(function(id){
+  document.getElementById(id).addEventListener('click',function(e){
+    const b=e.target.closest('button[data-cat-name]');
+    if(b) delCat(b.getAttribute('data-cat-kind'), b.getAttribute('data-cat-name'));
+  });
+});
+document.getElementById('curList').addEventListener('click',function(e){
+  const b=e.target.closest('button[data-cur-code]');
+  if(b) delCur(b.getAttribute('data-cur-code'));
+});
 // ---- Backup & Restore (offline, device only) ----
 // Backup: one JSON file with ALL transactions + hero/tab settings.
 // Restore: validates the file, asks for confirmation, then replaces
@@ -587,7 +723,10 @@ function backupSettings(){
     heroHidden: heroHidden ? '1' : '0',
     heroPin: heroPin || '',
     heroLocked: heroLocked ? '1' : '0',
-    activeTab: activeTab
+    activeTab: activeTab,
+    incCats: incCats.slice(),
+    expCats: expCats.slice(),
+    currencies: curs.map(c=>({name:c.name,code:c.code,symbol:c.symbol}))
   };
 }
 function downloadTextFile(filename, text, mime){
@@ -615,13 +754,18 @@ document.getElementById('restoreFile').addEventListener('change',function(){
     let data;
     try{ data=JSON.parse(reader.result); }catch(e){ alert('هذا الملف ليس نسخة احتياطية صالحة — ملف JSON غير صحيح.'); return; }
     if(!data || typeof data!=='object' || !Array.isArray(data.transactions)){ alert('هذا الملف ليس نسخة احتياطية صالحة — لا يحتوي على قائمة حركات.'); return; }
+    // Currencies/categories in the backup are restored first, so transactions
+    // in a custom currency from the backup are not rejected as unknown.
+    const st0=(data.settings && typeof data.settings==='object') ? data.settings : {};
+    const restoredCurs=validCurs(st0.currencies);
+    const allowedCurs=new Set(Object.keys(CUR).concat(['TRY'], restoredCurs?restoredCurs.map(c=>c.code):[]));
     // Validate + normalise each entry; skip malformed ones instead of failing the whole restore.
     const valid=[];
     data.transactions.forEach(t=>{
       if(!t || typeof t!=='object') return;
       if(t.type!=='income' && t.type!=='expense') return;
       const amount=Number(t.amount); if(!isFinite(amount) || amount<=0) return;
-      if(!['SYP','USD','EUR','TRY'].includes(t.currency)) return;
+      if(!allowedCurs.has(t.currency)) return;
       if(t.wallet!=='cash' && t.wallet!=='sham') return;
       if(typeof t.date!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(t.date)) return;
       valid.push({
@@ -636,8 +780,12 @@ document.getElementById('restoreFile').addEventListener('change',function(){
     if(!confirm('سيتم استبدال جميع الحركات الحالية ('+txs.length+' حركة) بنسخة الاحتياطية ('+valid.length+' حركة صالحة من أصل '+data.transactions.length+'). هل أنت متأكد؟')) return;
     txs=valid; save();
     // Restore settings if present (validated); otherwise keep current settings.
-    const st=(data.settings && typeof data.settings==='object') ? data.settings : {};
-    if(['SYP','USD','EUR'].includes(st.heroCurrency)){ heroCur=st.heroCurrency; localStorage.setItem('finance_hero_currency', heroCur); }
+    const st=st0;
+    if(restoredCurs){ curs=restoredCurs; saveCurs(); }
+    const ri=validCats(st.incCats); if(ri){ incCats=ri; saveCats('income'); }
+    const re=validCats(st.expCats); if(re){ expCats=re; saveCats('expense'); }
+    if(st.heroCurrency && CUR[st.heroCurrency]){ heroCur=st.heroCurrency; localStorage.setItem('finance_hero_currency', heroCur); }
+    else if(!CUR[heroCur]){ heroCur=Object.keys(CUR)[0]; localStorage.setItem('finance_hero_currency', heroCur); }
     if(st.heroHidden==='1' || st.heroHidden==='0'){ heroHidden=st.heroHidden==='1'; localStorage.setItem('finance_hero_hidden', st.heroHidden); }
     if(typeof st.heroPin==='string' && /^(\d{4})?$/.test(st.heroPin)){
       heroPin=st.heroPin;
