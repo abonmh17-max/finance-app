@@ -51,7 +51,16 @@ main{padding:12px;max-width:900px;margin:0 auto;padding-bottom:110px}
 .pin-actions .btn{flex:1;margin-top:0}
 .card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .card h2{margin:0 0 10px;font-size:17px}
-.tabs{display:flex;gap:8px;margin-bottom:10px}
+.tabs{display:flex;gap:8px;margin:6px 0 10px}
+.voice-row{display:flex;gap:8px;align-items:center;margin:0 0 18px}
+.voice-row .btn{margin-top:0}
+#voiceBox{margin:12px 0 16px}
+.row{flex-wrap:wrap}
+.row>div{min-width:140px}
+.search-row{flex-wrap:wrap}
+.confirm-actions{display:flex;gap:10px;margin-top:16px}
+.confirm-actions .btn{flex:1;margin-top:0;padding:14px 8px;font-size:18px}
+.confirm-ok{background:#b42318 !important}
 .tabs button{flex:1;padding:11px;border:1px solid #cfd8dc;background:#eef2f3;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer}
 .tabs button.active-inc{background:#0b6e4f;color:#fff;border-color:#0b6e4f}
 .tabs button.active-exp{background:#b42318;color:#fff;border-color:#b42318}
@@ -134,8 +143,8 @@ input[type=date]{direction:ltr;text-align:right}
 <section id="pageDetails" class="tabpage">
 <div class="card">
 <h2>إضافة عملية جديدة</h2>
-<div style="display:flex;gap:8px;align-items:center"><button class="btn" id="micBtn" type="button" style="background:#7c3aed;margin-top:0;flex:1">🎙️ إدخال صوتي — تحدث بالعربية</button><button class="info-btn" type="button" title="كيف يعمل الإدخال الصوتي؟" data-info="مثال: «دفعت 5000 ليرة سورية كاش للطعام اليوم» أو «قبضت 300 دولار شام كاش راتب». سيظهر النص وما فهمناه كمسودة للمراجعة — ولا يُحفظ شيء قبل أن تضغط «حفظ» بنفسك.">ⓘ</button></div>
-<div id="voiceBox" style="display:none;background:#f5f3ff;border:1px solid #c4b5fd;border-radius:10px;padding:10px;margin-bottom:10px"></div>
+<div class="voice-row"><button class="btn" id="micBtn" type="button" style="background:#7c3aed;margin-top:0;flex:1">🎙️ إدخال صوتي — تحدث بالعربية</button><button class="info-btn" type="button" title="كيف يعمل الإدخال الصوتي؟" data-info="مثال: «دفعت 5000 ليرة سورية كاش للطعام اليوم» أو «قبضت 300 دولار شام كاش راتب». سيظهر النص وما فهمناه كمسودة للمراجعة — ولا يُحفظ شيء قبل أن تضغط «حفظ» بنفسك.">ⓘ</button></div>
+<div id="voiceBox" style="display:none;background:#f5f3ff;border:1px solid #c4b5fd;border-radius:10px;padding:10px"></div>
 <div class="tabs">
 <button id="tabInc" type="button" class="active-inc">⬇ قبض</button>
 <button id="tabExp" type="button">⬆ دفع</button>
@@ -260,6 +269,16 @@ input[type=date]{direction:ltr;text-align:right}
 <div class="pin-actions">
 <button class="btn" id="pinOk" type="button">تأكيد</button>
 <button class="btn secondary" id="pinCancel" type="button">إلغاء</button>
+</div>
+</div>
+</div>
+<div id="confirmModal" class="pin-overlay" style="display:none">
+<div class="pin-box">
+<h3 id="confirmTitle">هل تريد تأكيد الحذف؟</h3>
+<p class="hint" id="confirmMsg" style="font-size:15px;line-height:1.9;white-space:pre-line;color:#334155"></p>
+<div class="confirm-actions">
+<button class="btn confirm-ok" id="confirmOk" type="button">موافق</button>
+<button class="btn secondary" id="confirmCancel" type="button">إلغاء</button>
 </div>
 </div>
 </div>
@@ -588,7 +607,12 @@ window.editTx=function(id){
   document.getElementById('cancelEdit').style.display='block'; setCats();
   window.scrollTo({top:0,behavior:'smooth'});
 };
-window.delTx=function(id){ if(confirm('حذف هذه العملية؟')){ txs=txs.filter(x=>x.id!==id); save(); render(); } };
+window.delTx=async function(id){
+  const t=txs.find(x=>x.id===id);
+  const msg=t?('حذف هذه العملية؟\n'+(t.type==='income'?'قبض':'دفع')+' — '+t.category+' • '+fmt(t.amount)+' '+t.currency+' • '+t.date):'حذف هذه العملية؟';
+  if(!(await askConfirm(msg))) return;
+  txs=txs.filter(x=>x.id!==id); save(); render();
+};
 document.getElementById('cancelEdit').onclick=()=>{ document.getElementById('editId').value=''; document.getElementById('form').reset(); document.getElementById('txDate').value=todayISO(); document.getElementById('cancelEdit').style.display='none'; setCats(); };
 document.getElementById('form').addEventListener('submit',e=>{
   e.preventDefault();
@@ -672,11 +696,12 @@ function addCat(kind){
   if(arr.includes(name)){ alert('هذه الفئة موجودة بالفعل.'); return; }
   arr.push(name); saveCats(kind); inp.value=''; setCats(); render();
 }
-function delCat(kind, name){
+async function delCat(kind, name){
   const arr=kind==='expense'?expCats:incCats;
-  const used=txs.filter(t=>t.category===name).length;
-  if(used && !confirm('هذه الفئة مستخدمة في '+used+' حركة سابقة. الحركات القديمة ستحتفظ باسم الفئة، لكن الفئة لن تظهر بعد الآن عند إضافة حركة جديدة. هل تريد حذفها؟')) return;
   const idx=arr.indexOf(name); if(idx<0) return;
+  const used=txs.filter(t=>t.category===name).length;
+  const msg=used?('هذه الفئة "'+name+'" مستخدمة في '+used+' حركة سابقة.\nالحركات القديمة ستحتفظ باسم الفئة، لكن الفئة لن تظهر بعد الآن عند إضافة حركة جديدة.'):'حذف الفئة "'+name+'"؟';
+  if(!(await askConfirm(msg))) return;
   arr.splice(idx,1); saveCats(kind); setCats(); render();
 }
 function addCur(){
@@ -690,11 +715,12 @@ function addCur(){
   document.getElementById('newCurName').value=''; document.getElementById('newCurCode').value=''; document.getElementById('newCurSymbol').value='';
   syncCurrencySelects(); render();
 }
-function delCur(code){
+async function delCur(code){
   if(curs.length<=1){ alert('لا يمكن حذف آخر عملة — يجب أن تبقى عملة واحدة على الأقل.'); return; }
   const c=curs.find(x=>x.code===code); if(!c) return;
   const used=txs.filter(t=>t.currency===code).length;
-  if(used && !confirm('هذه العملة مستخدمة في '+used+' حركة سابقة. الحركات القديمة ستبقى محفوظة وظاهرة في السجل بعملتها القديمة، لكنها لن تُحسب في الأرصدة والتقارير الجديدة. هل تريد حذفها؟')) return;
+  const msg=used?('هذه العملة "'+c.name+'" ('+code+') مستخدمة في '+used+' حركة سابقة.\nالحركات القديمة ستبقى محفوظة وظاهرة في السجل بعملتها القديمة، لكنها لن تُحسب في الأرصدة والتقارير الجديدة.'):'حذف العملة "'+c.name+'" ('+code+')؟';
+  if(!(await askConfirm(msg))) return;
   curs=curs.filter(x=>x.code!==code); saveCurs();
   if(heroCur===code){ heroCur=Object.keys(CUR)[0]; localStorage.setItem('finance_hero_currency', heroCur); }
   syncCurrencySelects(); render();
@@ -750,7 +776,7 @@ document.getElementById('restoreFile').addEventListener('change',function(){
   if(!f) return;
   const reader=new FileReader();
   reader.onerror=()=>alert('تعذّرت قراءة الملف — حاول مرة أخرى.');
-  reader.onload=()=>{
+  reader.onload=async ()=>{
     let data;
     try{ data=JSON.parse(reader.result); }catch(e){ alert('هذا الملف ليس نسخة احتياطية صالحة — ملف JSON غير صحيح.'); return; }
     if(!data || typeof data!=='object' || !Array.isArray(data.transactions)){ alert('هذا الملف ليس نسخة احتياطية صالحة — لا يحتوي على قائمة حركات.'); return; }
@@ -777,7 +803,7 @@ document.getElementById('restoreFile').addEventListener('change',function(){
         note: typeof t.note==='string' ? t.note : ''
       });
     });
-    if(!confirm('سيتم استبدال جميع الحركات الحالية ('+txs.length+' حركة) بنسخة الاحتياطية ('+valid.length+' حركة صالحة من أصل '+data.transactions.length+'). هل أنت متأكد؟')) return;
+    if(!(await askConfirm('سيتم استبدال جميع الحركات الحالية ('+txs.length+' حركة) بنسخة الاحتياطية ('+valid.length+' حركة صالحة من أصل '+data.transactions.length+').', 'هل تريد تأكيد الاستعادة؟'))) return;
     txs=valid; save();
     // Restore settings if present (validated); otherwise keep current settings.
     const st=st0;
@@ -900,6 +926,26 @@ function askPin(title,msg){
   document.getElementById('pinCancel').addEventListener('click',function(){ pinClose(null); });
   document.getElementById('pinModal').addEventListener('click',function(e){ if(e.target===this) pinClose(null); });
 })();
+// ---- Shared delete confirmation modal (custom, not native confirm) ----
+// One dialog for every destructive action: title 'هل تريد تأكيد الحذف؟',
+// big red 'موافق' and 'إلغاء' buttons. Nothing happens until the user taps
+// 'موافق'; tapping 'إلغاء', outside the box, or Escape cancels safely.
+let confirmResolve=null;
+function askConfirm(msg, title){
+  return new Promise(function(resolve){
+    confirmResolve=resolve;
+    document.getElementById('confirmTitle').textContent=title||'هل تريد تأكيد الحذف؟';
+    document.getElementById('confirmMsg').textContent=msg||'';
+    document.getElementById('confirmModal').style.display='flex';
+  });
+}
+function confirmClose(val){ const m=document.getElementById('confirmModal'); if(m) m.style.display='none'; const r=confirmResolve; confirmResolve=null; if(r) r(val); }
+(function confirmWire(){
+  document.getElementById('confirmOk').addEventListener('click',function(){ confirmClose(true); });
+  document.getElementById('confirmCancel').addEventListener('click',function(){ confirmClose(false); });
+  document.getElementById('confirmModal').addEventListener('click',function(e){ if(e.target===this) confirmClose(false); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape' && document.getElementById('confirmModal').style.display==='flex') confirmClose(false); });
+})();
 window.heroSetPin=async function(){
   const p1=await askPin('تعيين رقم القفل','عيّن رقماً من 4 أرقام لقفل الرصيد:'); if(p1===null) return;
   const p2=await askPin('تأكيد الرقم','أعد إدخال الرقم نفسه للتأكيد:'); if(p2===null) return;
@@ -921,13 +967,13 @@ window.heroChangePin=async function(){
   if(p1!==p2){ alert('الرقمان غير متطابقين — حاول مرة أخرى.'); return; }
   heroPin=p1; localStorage.setItem('finance_hero_pin', p1); alert('تم تغيير الرقم.'); render();
 };
-window.heroRemoveLock=function(){
+window.heroRemoveLock=async function(){
   if(heroLocked){ alert('أدخل الرقم أولاً لفتح القفل.'); return; }
-  if(!confirm('إزالة القفل؟ ستبقى كل عملياتك وأرصدتك كما هي، ولن يُحذف شيء.')) return;
+  if(!(await askConfirm('إزالة القفل؟\nستبقى كل عملياتك وأرصدتك كما هي، ولن يُحذف شيء.'))) return;
   heroPin=''; heroLocked=false; localStorage.removeItem('finance_hero_pin'); localStorage.removeItem('finance_hero_locked'); render();
 };
-window.heroForgotPin=function(){
-  if(!confirm('نسيت الرقم؟ سيتم إزالة القفل فقط — لن تُحذف أي عملية أو رصيد. القفل شاشة خصوصية على جهازك وليس حماية بنكية. هل تريد إزالة القفل؟')) return;
+window.heroForgotPin=async function(){
+  if(!(await askConfirm('سيتم إزالة القفل فقط — لن تُحذف أي عملية أو رصيد.\nالقفل شاشة خصوصية على جهازك وليس حماية بنكية.'))) return;
   heroPin=''; heroLocked=false; localStorage.removeItem('finance_hero_pin'); localStorage.removeItem('finance_hero_locked'); render();
 };
 setType('income'); window.switchTab(activeTab); render();
