@@ -686,7 +686,7 @@ function render(){
   if(heroDebt){
     const owedD=debts.filter(function(d){ return d.type==='owed'&&d.currency===heroCur; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
     const oweD=debts.filter(function(d){ return d.type==='owe'&&d.currency===heroCur; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
-    heroDebt.innerHTML=(owedD||oweD)?'<div class="hero-cur"><div class="hero-cur-name">💳 الديون — '+CUR[heroCur]+'</div><div class="hero-cur-sub">لي: '+show(owedD)+' • عليّ: '+show(oweD)+'</div></div>':'';
+    heroDebt.innerHTML=(owedD||oweD)?'<div class="hero-cur"><div class="hero-cur-name">💳 الديون — '+CUR[heroCur]+'</div><div class="hero-cur-sub"><span style="color:#0b6e4f;font-weight:700">⬇ لي: '+show(owedD)+'</span> • <span style="color:#b42318;font-weight:700">⬆ عليّ: '+show(oweD)+'</span></div></div>':'';
   }
   // List (search + filters)
   const q=(document.getElementById('search').value||'').trim();
@@ -776,7 +776,7 @@ function renderDebts(){
   Object.keys(CUR).forEach(function(c){
     const owed=debts.filter(function(d){ return d.type==='owed'&&d.currency===c; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
     const owe=debts.filter(function(d){ return d.type==='owe'&&d.currency===c; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
-    if(owed||owe) h+='<div class="sum"><h3>'+CUR[c]+'</h3><div class="big rem">لي: '+fmt(owed)+'</div><small class="inc">عليّ: '+fmt(owe)+'</small><small>الصافي لي: '+fmt(owed-owe)+'</small></div>';
+    if(owed||owe){ const net=owed-owe; h+='<div class="sum"><h3>'+CUR[c]+'</h3><div class="big" style="color:#0b6e4f">⬇ لي: '+fmt(owed)+'</div><div class="big" style="color:#b42318">⬆ عليّ: '+fmt(owe)+'</div><small style="color:'+(net>=0?'#0b6e4f':'#b42318')+'">الصافي '+(net>=0?'لي':'عليّ')+': '+fmt(Math.abs(net))+'</small></div>'; }
   });
   sumEl.innerHTML=h||'<p class="empty">لا ديون مسجلة بعد.</p>';
   const q=(document.getElementById('debtSearch').value||'').trim();
