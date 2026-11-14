@@ -807,7 +807,7 @@ function renderDebts(){
     else if(d.type==='owed') style=' style="background:#e8f8f1;border-color:#34a97b"';
     else style=' style="background:#fdf0ef;border-color:#e8a49e"';
     if(overdue) style=' style="background:#fdecea;border-color:#b42318"';
-    return '<div class="tx"'+style+'><div class="top"><div><b>'+label+' — '+escAttr(d.person)+'</b><span class="date-badge">📅 '+d.date+'</span><div class="meta">'+badge+' • '+curName(d.currency)+debtDueInfo(d)+'</div><div class="meta">المبلغ: '+fmt(d.amount)+' '+d.currency+' • المسدد: '+fmt(d.paid||0)+' • المتبقي: '+fmt(rem)+'</div>'+(d.note?'<div class="meta">📝 '+escAttr(d.note)+'</div>':'')+'</div><div class="amt '+cls+'">'+fmt(rem)+' '+d.currency+'</div></div><div class="actions">'+(st!=='paid'?'<button onclick="debtPay(\''+d.id+'\')">💰 تسجيل دفعة</button><button onclick="debtSettle(\''+d.id+'\')">✅ تسديد كامل</button>':'')+'<button onclick="editDebt(\''+d.id+'\')">✏️ تعديل</button><button onclick="delDebt(\''+d.id+'\')">🗑️ حذف</button></div></div>';
+    return '<div class="tx"'+style+'><div class="top"><div><b>'+label+' — '+escAttr(d.person)+'</b><span class="date-badge">📅 '+d.date+'</span><div class="meta">'+badge+' • '+curName(d.currency)+debtDueInfo(d)+'</div><div class="meta">المبلغ: '+fmt(d.amount)+' '+d.currency+' • المسدد: '+fmt(d.paid||0)+' • المتبقي: '+fmt(rem)+'</div>'+(d.note?'<div class="meta">📝 '+escAttr(d.note)+'</div>':'')+'</div><div class="amt '+cls+'">'+fmt(rem)+' '+d.currency+'</div></div><div class="actions">'+(st!=='paid'?'<button onclick="debtPay(\''+d.id+'\')">💰 تسجيل دفعة</button><button onclick="debtSettle(\''+d.id+'\')">✅ تسديد كامل</button>':'')+((+d.paid||0)>0?'<button onclick="debtEditPaid(\''+d.id+'\')">✏️ تعديل المسدد</button>':'')+'<button onclick="editDebt(\''+d.id+'\')">✏️ تعديل</button><button onclick="delDebt(\''+d.id+'\')">🗑️ حذف</button></div></div>';
   }).join('');
 }
 function setDebtType(t){
@@ -883,6 +883,15 @@ window.debtSettle=async function(id){
   if(!(await askConfirm('تسديد كامل المتبقي؟\n'+fmt(rem)+' '+d.currency+' — '+(d.type==='owed'?'من ':'إلى ')+d.person,'تأكيد التسديد الكامل؟'))) return;
   await recordDebtPayment(d, rem);
   d.paid=+d.amount; saveDebts(); render();
+};
+window.debtEditPaid=function(id){
+  const d=debts.find(function(x){ return x.id===id; }); if(!d) return;
+  const v=window.prompt('عدّل المبلغ المسدد ('+d.currency+') — مبلغ الدين '+fmt(d.amount)+' — المسدد الحالي '+fmt(d.paid||0)+':', String(+d.paid||0));
+  if(v===null) return;
+  const amt=parseFloat(v);
+  if(isNaN(amt)||amt<0){ alert('أدخل مبلغاً صحيحاً'); return; }
+  if(amt>+d.amount){ alert('المسدد لا يمكن أن يكون أكبر من مبلغ الدين ('+fmt(d.amount)+')'); return; }
+  d.paid=amt; saveDebts(); render();
 };
 document.getElementById('debtFilters').addEventListener('click',function(e){
   if(e.target.dataset.f){
