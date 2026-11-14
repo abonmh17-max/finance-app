@@ -6,12 +6,18 @@
 <title>تنظيم النفقات المالية</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;background:#f2f4f7;color:#1a2530}
-header{background:#0b6e4f;color:#fff;padding:16px 14px 12px;position:sticky;top:0;z-index:5}
+:root{--bg:#f2f4f7;--card:#fff;--soft:#f8fafc;--text:#1a2530;--muted:#64748b;--muted2:#334155;--border:#e2e8f0;--border2:#cbd5d1;--accent:#0b6e4f;--accent-dark:#0b4a6f;--green:#0b6e4f;--red:#b42318;--hero1:#0aa58a;--hero2:#0b6e4f;--hero3:#084d38;--chip:#f1f5f9}
+body[data-theme="dark"]{--bg:#0f172a;--card:#1e293b;--soft:#16213a;--text:#e2e8f0;--muted:#94a3b8;--muted2:#cbd5e1;--border:#334155;--border2:#475569;--accent:#10b981;--accent-dark:#38bdf8;--green:#34d399;--red:#f87171;--hero1:#0d9488;--hero2:#065f46;--hero3:#022c22;--chip:#243247}
+body[data-theme="midnight"]{--bg:#0b1220;--card:#16213a;--soft:#1b2a4a;--text:#e8eefc;--muted:#93a5cf;--muted2:#c7d3ee;--border:#2a3a5f;--border2:#3b4f7d;--accent:#3b82f6;--accent-dark:#60a5fa;--green:#4ade80;--red:#f87171;--hero1:#2563eb;--hero2:#1d4ed8;--hero3:#172554;--chip:#1e2c4f}
+body[data-theme="violet"]{--bg:#f5f3ff;--card:#fff;--soft:#ede9fe;--text:#2e1065;--muted:#7c6aa8;--muted2:#5b21b6;--border:#ddd6fe;--border2:#c4b5fd;--accent:#7c3aed;--accent-dark:#6d28d9;--green:#059669;--red:#dc2626;--hero1:#8b5cf6;--hero2:#7c3aed;--hero3:#4c1d95;--chip:#ede9fe}
+html.fs-small{zoom:.9}
+html.fs-large{zoom:1.15}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{background:var(--accent);color:#fff;padding:16px 14px 12px;position:sticky;top:0;z-index:5}
 header h1{margin:0;font-size:20px}
 header p{margin:4px 0 0;font-size:13px;opacity:.9}
 main{padding:12px;max-width:900px;margin:0 auto;padding-bottom:110px}
-.hero{background:linear-gradient(135deg,#0aa58a 0%,#0b6e4f 55%,#084d38 100%);color:#fff;border-radius:18px;padding:18px 16px 12px;margin-bottom:12px;box-shadow:0 4px 14px rgba(11,110,79,.35)}
+.hero{background:linear-gradient(135deg,var(--hero1) 0%,var(--hero2) 55%,var(--hero3) 100%);color:#fff;border-radius:18px;padding:18px 16px 12px;margin-bottom:12px;box-shadow:0 4px 14px rgba(11,110,79,.35)}
 .hero-head{display:flex;justify-content:space-between;align-items:flex-start}
 .hero-title{display:flex;align-items:center;gap:10px}
 .hero-logo{width:46px;height:46px;flex:none;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
@@ -27,7 +33,7 @@ main{padding:12px;max-width:900px;margin:0 auto;padding-bottom:110px}
 .hero-head-btns{display:flex;gap:8px;flex:none}
 .hero-tabs{display:flex;gap:6px;margin:14px 0 4px;flex-wrap:wrap}
 .hero-tab{flex:1;padding:9px 4px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.14);color:#fff;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
-.hero-tab.active{background:#fff;color:#0b6e4f;border-color:#fff}
+.hero-tab.active{background:#fff;color:var(--accent-dark);border-color:#fff}
 .hero-main{text-align:center;padding:10px 0 6px}
 .hero-main-label{font-size:14px;opacity:.9}
 .hero-main-amt{font-size:38px;font-weight:800;direction:ltr;line-height:1.2}
@@ -41,15 +47,15 @@ main{padding:12px;max-width:900px;margin:0 auto;padding-bottom:110px}
 .hero-lockrow button.linklike{background:none;border:none;text-decoration:underline;opacity:.9}
 .hero-lockrow button.pin-remove{background:#b42318;border-color:#b42318;color:#fff}
 .pin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
-.pin-box{background:#fff;border-radius:18px;padding:22px 18px;max-width:360px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3)}
-.pin-box h3{margin:0 0 4px;font-size:20px;color:#0f172a}
+.pin-box{background:var(--card);border-radius:18px;padding:22px 18px;max-width:360px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.pin-box h3{margin:0 0 4px;font-size:20px;color:var(--text)}
 .pin-digits{display:flex;gap:10px;justify-content:center;margin:18px 0 8px;direction:ltr}
-.pin-digit{width:58px;height:68px;font-size:34px;font-weight:800;text-align:center;border:2px solid #cbd5e1;border-radius:14px;color:#0f172a;background:#f8fafc;caret-color:#0b6e4f}
-.pin-digit:focus{outline:none;border-color:#0b6e4f;background:#fff}
-.pin-error{color:#b42318;font-size:13px;font-weight:700;min-height:18px;margin:4px 0}
+.pin-digit{width:58px;height:68px;font-size:34px;font-weight:800;text-align:center;border:2px solid var(--border2);border-radius:14px;color:var(--text);background:var(--soft);caret-color:var(--accent)}
+.pin-digit:focus{outline:none;border-color:var(--accent);background:var(--card)}
+.pin-error{color:var(--red);font-size:13px;font-weight:700;min-height:18px;margin:4px 0}
 .pin-actions{display:flex;gap:10px;margin-top:10px}
 .pin-actions .btn{flex:1;margin-top:0}
-.card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .card h2{margin:0 0 10px;font-size:17px}
 .tabs{display:flex;gap:8px;margin:6px 0 10px}
 .voice-row{display:flex;gap:8px;align-items:center;margin:0 0 18px}
@@ -60,64 +66,64 @@ main{padding:12px;max-width:900px;margin:0 auto;padding-bottom:110px}
 .search-row{flex-wrap:wrap}
 .confirm-actions{display:flex;gap:10px;margin-top:16px}
 .confirm-actions .btn{flex:1;margin-top:0;padding:14px 8px;font-size:18px}
-.confirm-ok{background:#b42318 !important}
-.tabs button{flex:1;padding:11px;border:1px solid #cfd8dc;background:#eef2f3;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer}
-.tabs button.active-inc{background:#0b6e4f;color:#fff;border-color:#0b6e4f}
-.tabs button.active-exp{background:#b42318;color:#fff;border-color:#b42318}
+.confirm-ok{background:var(--red) !important}
+.tabs button{flex:1;padding:11px;border:1px solid var(--border2);background:var(--soft);border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;color:var(--text)}
+.tabs button.active-inc{background:var(--green);color:#fff;border-color:var(--green)}
+.tabs button.active-exp{background:var(--red);color:#fff;border-color:var(--red)}
 label{display:block;font-size:13px;font-weight:700;margin:10px 0 4px}
-input,select,textarea{width:100%;padding:11px;border:1px solid #cbd5d1;border-radius:10px;font-size:16px;font-family:inherit;background:#fff}
+input,select,textarea{width:100%;padding:11px;border:1px solid var(--border2);border-radius:10px;font-size:16px;font-family:inherit;background:var(--card);color:var(--text)}
 input[type=date]{direction:ltr;text-align:right}
 .row{display:flex;gap:10px}.row>div{flex:1}
-.btn{width:100%;padding:13px;border:none;border-radius:12px;font-size:17px;font-weight:800;cursor:pointer;background:#0b6e4f;color:#fff;margin-top:14px}
-.btn.exp{background:#b42318}
+.btn{width:100%;padding:13px;border:none;border-radius:12px;font-size:17px;font-weight:800;cursor:pointer;background:var(--accent);color:#fff;margin-top:14px}
+.btn.exp{background:var(--red)}
 .btn.secondary{background:#334155}
 .btn.small{width:auto;padding:8px 12px;font-size:14px;margin-top:0}
 .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.sum{border:1px solid #e2e8f0;border-radius:12px;padding:10px;background:#f8fafc}
+.sum{border:1px solid var(--border);border-radius:12px;padding:10px;background:var(--soft)}
 .sum h3{margin:0 0 6px;font-size:15px}
 .sum .big{font-size:20px;font-weight:800}
-.sum .inc{color:#0b6e4f}.sum .exp{color:#b42318}.sum .rem{color:#0b4a6f}
-.sum small{display:block;color:#475569;margin-top:3px;font-size:12px}
+.sum .inc{color:var(--green)}.sum .exp{color:var(--red)}.sum .rem{color:var(--accent-dark)}
+.sum small{display:block;color:var(--muted);margin-top:3px;font-size:12px}
 .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
-.filters button{padding:9px 12px;border:1px solid #cbd5d1;background:#fff;border-radius:20px;font-size:14px;cursor:pointer}
-.filters button.active{background:#0b4a6f;color:#fff;border-color:#0b4a6f}
-.bar-row{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px dashed #e2e8f0}
-.bar{height:8px;background:#e2e8f0;border-radius:6px;overflow:hidden;margin:3px 0 8px}
-.bar i{display:block;height:100%;background:#0b6e4f}
-.bar.exp i{background:#b42318}
-.tx{border:1px solid #e2e8f0;border-radius:12px;padding:10px;margin-bottom:8px;background:#fff;cursor:pointer}
+.filters button{padding:9px 12px;border:1px solid var(--border2);background:var(--card);border-radius:20px;font-size:14px;cursor:pointer;color:var(--text)}
+.filters button.active{background:var(--accent-dark);color:#fff;border-color:var(--accent-dark)}
+.bar-row{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-bottom:1px dashed var(--border)}
+.bar{height:8px;background:var(--border);border-radius:6px;overflow:hidden;margin:3px 0 8px}
+.bar i{display:block;height:100%;background:var(--green)}
+.bar.exp i{background:var(--red)}
+.tx{border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px;background:var(--card);cursor:pointer}
 .tx .top{display:flex;justify-content:space-between;gap:8px}
 .tx .amt{font-weight:800;font-size:17px;white-space:nowrap}
-.tx .amt.in{color:#0b6e4f}.tx .amt.out{color:#b42318}
-.tx .meta{font-size:13px;color:#334155;margin-top:4px}
+.tx .amt.in{color:var(--green)}.tx .amt.out{color:var(--red)}
+.tx .meta{font-size:13px;color:var(--muted2);margin-top:4px}
 .tx .date-badge{display:inline-block;background:#eef2ff;color:#1e3a8a;border-radius:6px;padding:2px 7px;font-size:12px;font-weight:700;margin-inline-start:6px}
 .tx .actions{margin-top:8px;display:flex;gap:8px}
-.tx .actions button{padding:7px 12px;border-radius:8px;border:1px solid #cbd5d1;background:#f8fafc;cursor:pointer}
-.empty{color:#64748b;text-align:center;padding:18px 0}
+.tx .actions button{padding:7px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--soft);cursor:pointer;color:var(--text)}
+.empty{color:var(--muted);text-align:center;padding:18px 0}
 .search-row{display:flex;gap:8px;margin-bottom:8px}
 .search-row input,.search-row select{font-size:14px;padding:9px}
-.hint{font-size:12px;color:#64748b;margin-top:6px}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
 .chip-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.chip{display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;padding:6px 10px;font-size:14px;color:#334155}
-.chip button{border:none;background:none;color:#b42318;font-weight:800;cursor:pointer;font-size:15px;padding:0;line-height:1}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--chip);border:1px solid var(--border);border-radius:20px;padding:6px 10px;font-size:14px;color:var(--muted2)}
+.chip button{border:none;background:none;color:var(--red);font-weight:800;cursor:pointer;font-size:15px;padding:0;line-height:1}
 .cat-input-row{display:flex;gap:8px;margin-top:8px}
 .cat-input-row input{flex:1;min-width:0}
 .cat-input-row button{width:auto;margin-top:0;white-space:nowrap}
-.info-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-width:24px;border-radius:50%;border:1.5px solid #94a3b8;background:#fff;color:#64748b;font-size:15px;font-weight:800;line-height:1;cursor:pointer;vertical-align:middle;padding:0}
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-width:24px;border-radius:50%;border:1.5px solid var(--muted);background:var(--card);color:var(--muted);font-size:15px;font-weight:800;line-height:1;cursor:pointer;vertical-align:middle;padding:0}
 .hero .info-btn{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.5);color:#fff}
-#infoPop{position:fixed;bottom:78px;inset-inline:12px;z-index:60;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.25);font-size:14px;line-height:1.8;color:#334155}
-#infoPopClose{display:block;margin:10px auto 0;padding:8px 22px;border:none;border-radius:10px;background:#0b6e4f;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+#infoPop{position:fixed;bottom:78px;inset-inline:12px;z-index:60;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.25);font-size:14px;line-height:1.8;color:var(--text)}
+#infoPopClose{display:block;margin:10px auto 0;padding:8px 22px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
 .tabpage{display:none}
 .tabpage.active{display:block}
-.bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:20;background:#fff;border-top:1px solid #e2e8f0;display:flex;box-shadow:0 -2px 10px rgba(0,0,0,.08);padding-bottom:env(safe-area-inset-bottom)}
-.bottomnav button{flex:1;padding:10px 4px 9px;border:none;background:#fff;font-size:15px;font-weight:800;color:#64748b;cursor:pointer;font-family:inherit}
-.bottomnav button.active{color:#0b6e4f}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;z-index:20;background:var(--card);border-top:1px solid var(--border);display:flex;box-shadow:0 -2px 10px rgba(0,0,0,.08);padding-bottom:env(safe-area-inset-bottom)}
+.bottomnav button{flex:1;padding:10px 4px 9px;border:none;background:var(--card);font-size:15px;font-weight:800;color:var(--muted);cursor:pointer;font-family:inherit}
+.bottomnav button.active{color:var(--accent)}
 .bottomnav button .ic{display:block;font-size:22px;line-height:1.2}
 .bottomnav button span{display:block;font-size:12px;margin-top:2px;white-space:nowrap}
-.date-head{font-size:13px;font-weight:800;color:#0b4a6f;margin:14px 0 6px}
+.date-head{font-size:13px;font-weight:800;color:var(--accent-dark);margin:14px 0 6px}
 .btn:active{transform:scale(.98)}
 .bottomnav button:active{background:#f0fdf4}
-.debt-due{color:#b42318;font-weight:800}
+.debt-due{color:var(--red);font-weight:800}
 
 </style>
 </head>
@@ -276,6 +282,23 @@ input[type=date]{direction:ltr;text-align:right}
 <div id="settingsLockBtns" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
 </div>
 <div class="card">
+<h2>🎨 المظهر وحجم الخط</h2>
+<p class="hint">بدّل بين ثيمات عصرية، وكبّر الخط أو صغّره — يُحفظ اختيارك على جهازك.</p>
+<h3>الثيم</h3>
+<div class="filters" id="themeBtns">
+<button type="button" data-theme="light">☀️ فاتح</button>
+<button type="button" data-theme="dark">🌙 داكن</button>
+<button type="button" data-theme="midnight">💙 ليلي</button>
+<button type="button" data-theme="violet">💜 بنفسجي</button>
+</div>
+<h3 style="margin-top:14px">حجم الخط</h3>
+<div class="filters" id="fontBtns">
+<button type="button" data-fs="small">صغير</button>
+<button type="button" data-fs="normal">عادي</button>
+<button type="button" data-fs="large">كبير</button>
+</div>
+</div>
+<div class="card">
 <h2>🏷️ الفئات <button class="info-btn" type="button" title="ما هي الفئات؟" data-info="أضف فئاتك الخاصة للقبض والمصروف، وستظهر فوراً في قائمة الفئات عند إضافة عملية جديدة، وفي تقرير «أين أنفقت؟». حذف فئة مستخدمة في حركات سابقة لا يحذف تلك الحركات — حركاتك القديمة تحتفظ باسم الفئة، لكن الفئة لن تظهر بعد الآن عند إضافة حركة جديدة.">ⓘ</button></h2>
 <h3>فئات المصروف</h3>
 <div class="chip-list" id="expCatList"></div>
@@ -288,7 +311,7 @@ input[type=date]{direction:ltr;text-align:right}
 <h2>💱 العملات <button class="info-btn" type="button" title="ما هي العملات؟" data-info="أضف عملاتك الخاصة، وستظهر فوراً في بطاقة الرصيد، وفي قائمة العملة عند إضافة عملية، وفي الأرصدة والتقارير. حذف عملة مستخدمة في حركات سابقة لا يحذف تلك الحركات — تبقى محفوظة وظاهرة في السجل بعملتها القديمة، لكنها لا تُحسب في الأرصدة والتقارير الجديدة. لا يمكن حذف آخر عملة — يجب أن تبقى عملة واحدة على الأقل.">ⓘ</button></h2>
 <div class="chip-list" id="curList"></div>
 <div style="margin-top:10px"><input id="newCurName" type="text" placeholder="اسم العملة — مثال: جنيه إسترليني" maxlength="30"></div>
-<div class="cat-input-row"><input id="newCurCode" type="text" placeholder="الرمز — مثال: GBP" maxlength="3"><input id="newCurSymbol" type="text" placeholder="الإشارة — مثال: £" maxlength="4"></div>
+<div class="cat-input-row"><input id="newCurCode" type="text" placeholder="الرمز — مثال: GBP" maxlength="3"><input id="newCurSymbol" type="text" placeholder="الإشارة — مثال: £" maxlength="4"><input id="newCurColor" type="color" value="#2563eb" title="لون العملة" style="flex:0 0 46px;padding:2px"></div>
 <button class="btn secondary" id="addCur" type="button">➕ إضافة عملة</button>
 </div>
 <div class="card" style="border:2px solid #0b6e4f;background:#ecfdf5">
@@ -486,14 +509,18 @@ const LS_KEY='finance_transactions_v1';
 // CUR is rebuilt from `curs` whenever the list changes, so hero tabs, balances,
 // report and export all read the same list. Old TRY transactions stay stored
 // and listed (CUR_OLD) but are excluded from new totals.
-const DEF_CURS=[{name:'ليرة سورية',code:'SYP',symbol:'ل.س'},{name:'دولار',code:'USD',symbol:'$'},{name:'يورو',code:'EUR',symbol:'€'}];
+const DEF_CURS=[{name:'ليرة سورية',code:'SYP',symbol:'ل.س',color:'#2563eb'},{name:'دولار',code:'USD',symbol:'$',color:'#0b6e4f'},{name:'يورو',code:'EUR',symbol:'€',color:'#7c3aed'}];
+const CUR_COLORS={SYP:'#2563eb',USD:'#0b6e4f',EUR:'#7c3aed'};
+const CUR_PALETTE=['#2563eb','#0b6e4f','#7c3aed','#b45309','#be185d','#0891b2','#4d7c0f','#b42318'];
+function validColor(v){ return typeof v==='string'&&/^#[0-9a-fA-F]{6}$/.test(v)?v.toLowerCase():null; }
+function curColor(code){ const c=curs.find(function(x){ return x.code===code; }); return (c&&validColor(c.color))||CUR_COLORS[code]||'#0b4a6f'; }
 function validCurs(v){
   if(!Array.isArray(v)) return null;
-  const ok=v.filter(c=>c&&typeof c.name==='string'&&c.name.trim()&&typeof c.code==='string'&&/^[A-Za-z]{3}$/.test(c.code.trim())).map(c=>({name:c.name.trim(),code:c.code.trim().toUpperCase(),symbol:typeof c.symbol==='string'?c.symbol.trim().slice(0,4):''}));
+  const ok=v.filter(c=>c&&typeof c.name==='string'&&c.name.trim()&&typeof c.code==='string'&&/^[A-Za-z]{3}$/.test(c.code.trim())).map(function(c,i){ const code=c.code.trim().toUpperCase(); return {name:c.name.trim(),code:code,symbol:typeof c.symbol==='string'?c.symbol.trim().slice(0,4):'',color:validColor(c.color)||CUR_COLORS[code]||CUR_PALETTE[i%CUR_PALETTE.length]}; });
   const seen={}; const dd=ok.filter(c=>{ if(seen[c.code]) return false; seen[c.code]=1; return true; });
   return dd.length?dd:null;
 }
-function loadCurs(){ try{ const v=validCurs(JSON.parse(localStorage.getItem('finance_currencies')||'null')); if(v) return v; }catch(e){} return DEF_CURS.map(c=>({name:c.name,code:c.code,symbol:c.symbol})); }
+function loadCurs(){ try{ const v=validCurs(JSON.parse(localStorage.getItem('finance_currencies')||'null')); if(v) return v; }catch(e){} return DEF_CURS.map(c=>({name:c.name,code:c.code,symbol:c.symbol,color:c.color})); }
 let curs=loadCurs();
 const CUR={};
 function rebuildCUR(){ Object.keys(CUR).forEach(k=>delete CUR[k]); curs.forEach(c=>{ CUR[c.code]=c.name; }); }
@@ -523,6 +550,25 @@ let heroPin=localStorage.getItem('finance_hero_pin')||'';
 let heroLocked=!!heroPin && localStorage.getItem('finance_hero_locked')!=='0';
 // Bottom tabs (Home / Details / Settings): remember last active tab, device only.
 let activeTab=localStorage.getItem('finance_active_tab')||'home';
+// ---- Appearance: modern themes + font size (Settings, device only) ----
+const THEMES=['light','dark','midnight','violet'];
+let appTheme=localStorage.getItem('finance_theme')||'light';
+if(!THEMES.includes(appTheme)) appTheme='light';
+const FONT_SIZES=['small','normal','large'];
+let appFontSize=localStorage.getItem('finance_font_size')||'normal';
+if(!FONT_SIZES.includes(appFontSize)) appFontSize='normal';
+function applyAppearance(){
+  document.body.setAttribute('data-theme', appTheme);
+  const de=document.documentElement;
+  de.classList.remove('fs-small','fs-large');
+  if(appFontSize==='small') de.classList.add('fs-small');
+  if(appFontSize==='large') de.classList.add('fs-large');
+  const tb=document.getElementById('themeBtns'); if(tb) tb.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-theme')===appTheme); });
+  const fb=document.getElementById('fontBtns'); if(fb) fb.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-fs')===appFontSize); });
+}
+function setTheme(t){ if(!THEMES.includes(t)) return; appTheme=t; localStorage.setItem('finance_theme', t); applyAppearance(); }
+function setFontSize(sz){ if(!FONT_SIZES.includes(sz)) return; appFontSize=sz; localStorage.setItem('finance_font_size', sz); applyAppearance(); }
+applyAppearance();
 if(!['home','details','settings','debts'].includes(activeTab)) activeTab='home';
 window.switchTab=function(t){
   activeTab=['home','details','settings','debts'].includes(t)?t:'home';
@@ -614,7 +660,11 @@ function render(){
   };
   const show=n=> heroMasked() ? '••••••' : fmt(n);
   const tabsEl=document.getElementById('heroTabs'), mainEl=document.getElementById('heroMain'), heroEl=document.getElementById('heroBalances'), lockRow=document.getElementById('heroLockRow');
-  if(tabsEl) tabsEl.innerHTML=Object.keys(CUR).map(c=>'<button type="button" class="hero-tab'+(c===heroCur?' active':'')+'" onclick="setHeroCur(\''+c+'\')">'+CUR[c]+'</button>').join('');
+  if(tabsEl) tabsEl.innerHTML=Object.keys(CUR).map(function(c){
+    const col=curColor(c);
+    if(c===heroCur) return '<button type="button" class="hero-tab active" style="background:'+col+';border-color:'+col+';color:#fff" onclick="setHeroCur(\''+c+'\')">'+CUR[c]+'</button>';
+    return '<button type="button" class="hero-tab" onclick="setHeroCur(\''+c+'\')"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+col+';margin-inline-end:4px"></span>'+CUR[c]+'</button>';
+  }).join('');
   if(mainEl){
     const total=bal(heroCur), cash=bal(heroCur,'cash'), sham=bal(heroCur,'sham');
     mainEl.innerHTML='<div class="hero-main-label">رصيدك — '+CUR[heroCur]+'</div><div class="hero-main-amt'+(total<0?' neg':'')+'">'+show(total)+' '+heroCur+'</div>'+(heroLocked?'<div class="hero-main-sub">🔒 الرصيد مقفل — أدخل الرقم لعرض التفاصيل</div>':'<div class="hero-main-sub">💵 كاش: '+show(cash)+' • 📱 شام كاش: '+show(sham)+'</div>');
@@ -622,7 +672,7 @@ function render(){
   if(heroEl){
     heroEl.innerHTML=Object.keys(CUR).filter(c=>c!==heroCur).map(c=>{
       const total=bal(c), cash=bal(c,'cash'), sham=bal(c,'sham');
-      return '<div class="hero-cur"><div><div class="hero-cur-name">'+CUR[c]+'</div><div class="hero-cur-sub">💵 كاش: '+show(cash)+' • 📱 شام كاش: '+show(sham)+'</div></div><div class="hero-cur-amt'+(total<0?' neg':'')+'">'+show(total)+' '+c+'</div></div>';
+      return '<div class="hero-cur" style="border-inline-start:4px solid '+curColor(c)+'"><div><div class="hero-cur-name"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+curColor(c)+';margin-inline-end:5px"></span>'+CUR[c]+'</div><div class="hero-cur-sub">💵 كاش: '+show(cash)+' • 📱 شام كاش: '+show(sham)+'</div></div><div class="hero-cur-amt'+(total<0?' neg':'')+'">'+show(total)+' '+c+'</div></div>';
     }).join('');
   }
   if(lockRow){
@@ -649,7 +699,7 @@ function render(){
     const exp=txs.filter(t=>t.type==='expense'&&t.currency===c).reduce((s,t)=>s+ +t.amount,0);
     const cashRem=txs.filter(t=>t.currency===c&&t.wallet==='cash').reduce((s,t)=>s+(t.type==='income'?+t.amount:-+t.amount),0);
     const shamRem=txs.filter(t=>t.currency===c&&t.wallet==='sham').reduce((s,t)=>s+(t.type==='income'?+t.amount:-+t.amount),0);
-    html+='<div class="sum"><h3>'+CUR[c]+'</h3><div class="big rem">المتبقي: '+fmt(inc-exp)+'</div><small class="inc">⬇ قبض: '+fmt(inc)+'</small><small class="exp">⬆ أنفقت: '+fmt(exp)+'</small><small>💵 كاش: '+fmt(cashRem)+'</small><small>📱 شام كاش: '+fmt(shamRem)+'</small></div>';
+    html+='<div class="sum"><h3 style="color:'+curColor(c)+'">'+CUR[c]+'</h3><div class="big rem">المتبقي: '+fmt(inc-exp)+'</div><small class="inc">⬇ قبض: '+fmt(inc)+'</small><small class="exp">⬆ أنفقت: '+fmt(exp)+'</small><small>💵 كاش: '+fmt(cashRem)+'</small><small>📱 شام كاش: '+fmt(shamRem)+'</small></div>';
   });
   el.innerHTML=html;
   let wh='';
@@ -693,7 +743,7 @@ function render(){
   if(heroDebt){
     const owedD=debts.filter(function(d){ return d.type==='owed'&&d.currency===heroCur; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
     const oweD=debts.filter(function(d){ return d.type==='owe'&&d.currency===heroCur; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
-    heroDebt.innerHTML=(owedD||oweD)?'<div class="hero-cur"><div class="hero-cur-name">💳 الديون — '+CUR[heroCur]+'</div><div class="hero-cur-sub"><span style="color:#0b6e4f;font-weight:700">⬇ لي: '+show(owedD)+'</span> • <span style="color:#b42318;font-weight:700">⬆ عليّ: '+show(oweD)+'</span></div></div>':'';
+    heroDebt.innerHTML=(owedD||oweD)?'<div class="hero-cur"><div class="hero-cur-name"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+curColor(heroCur)+';margin-inline-end:5px"></span>💳 الديون — '+CUR[heroCur]+'</div><div class="hero-cur-sub"><span style="color:var(--green);font-weight:700">⬇ لي: '+show(owedD)+'</span> • <span style="color:var(--red);font-weight:700">⬆ عليّ: '+show(oweD)+'</span></div></div>':'';
   }
   // List (search + filters)
   const q=(document.getElementById('search').value||'').trim();
@@ -788,7 +838,7 @@ function renderDebts(){
   Object.keys(CUR).forEach(function(c){
     const owed=debts.filter(function(d){ return d.type==='owed'&&d.currency===c; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
     const owe=debts.filter(function(d){ return d.type==='owe'&&d.currency===c; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
-    if(owed||owe){ const net=owed-owe; h+='<div class="sum"><h3>'+CUR[c]+'</h3><div class="big" style="color:#0b6e4f">⬇ لي: '+fmt(owed)+'</div><div class="big" style="color:#b42318">⬆ عليّ: '+fmt(owe)+'</div><small style="color:'+(net>=0?'#0b6e4f':'#b42318')+'">الصافي '+(net>=0?'لي':'عليّ')+': '+fmt(Math.abs(net))+'</small></div>'; }
+    if(owed||owe){ const net=owed-owe; h+='<div class="sum"><h3 style="color:'+curColor(c)+'">'+CUR[c]+'</h3><div class="big" style="color:var(--green)">⬇ لي: '+fmt(owed)+'</div><div class="big" style="color:var(--red)">⬆ عليّ: '+fmt(owe)+'</div><small style="color:'+(net>=0?'var(--green)':'var(--red)')+'">الصافي '+(net>=0?'لي':'عليّ')+': '+fmt(Math.abs(net))+'</small></div>'; }
   });
   sumEl.innerHTML=h||'<p class="empty">لا ديون مسجلة بعد.</p>';
   const q=(document.getElementById('debtSearch').value||'').trim();
@@ -1007,7 +1057,7 @@ function renderCurList(){
   const el=document.getElementById('curList'); if(!el) return;
   el.innerHTML=curs.map(function(c){
     const n=txs.filter(t=>t.currency===c.code).length;
-    return '<span class="chip">'+c.name+' • '+c.code+(c.symbol?' '+c.symbol:'')+(n?' <small style="color:#64748b">('+n+')</small>':'')+' <button type="button" data-cur-code="'+c.code+'" title="حذف العملة">✕</button></span>';
+    return '<span class="chip"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:'+curColor(c.code)+'"></span>'+c.name+' • '+c.code+(c.symbol?' '+c.symbol:'')+(n?' <small style="color:#64748b">('+n+')</small>':'')+' <input type="color" value="'+curColor(c.code)+'" data-cur-color="'+c.code+'" title="تغيير لون العملة" style="width:26px;height:22px;padding:0;border:none;background:none;vertical-align:middle"> <button type="button" data-cur-code="'+c.code+'" title="حذف العملة">✕</button></span>';
   }).join('');
 }
 function addCat(kind){
@@ -1030,10 +1080,11 @@ function addCur(){
   const name=document.getElementById('newCurName').value.trim();
   const code=document.getElementById('newCurCode').value.trim().toUpperCase();
   const symbol=document.getElementById('newCurSymbol').value.trim();
+  const color=validColor(document.getElementById('newCurColor').value)||CUR_PALETTE[curs.length%CUR_PALETTE.length];
   if(!name){ alert('اكتب اسم العملة أولاً.'); return; }
   if(!/^[A-Za-z]{3}$/.test(code)){ alert('رمز العملة يجب أن يكون 3 أحرف إنجليزية — مثال: GBP.'); return; }
   if(curs.some(c=>c.code===code)){ alert('هذه العملة موجودة بالفعل (نفس الرمز).'); return; }
-  curs.push({name:name,code:code,symbol:symbol.slice(0,4)}); saveCurs();
+  curs.push({name:name,code:code,symbol:symbol.slice(0,4),color:color}); saveCurs();
   document.getElementById('newCurName').value=''; document.getElementById('newCurCode').value=''; document.getElementById('newCurSymbol').value='';
   syncCurrencySelects(); render();
 }
@@ -1060,6 +1111,22 @@ document.getElementById('curList').addEventListener('click',function(e){
   const b=e.target.closest('button[data-cur-code]');
   if(b) delCur(b.getAttribute('data-cur-code'));
 });
+document.getElementById('curList').addEventListener('change',function(e){
+  const inp=e.target.closest('input[data-cur-color]');
+  if(!inp) return;
+  const c=curs.find(function(x){ return x.code===inp.getAttribute('data-cur-color'); });
+  if(!c) return;
+  const col=validColor(inp.value); if(!col) return;
+  c.color=col; saveCurs(); render();
+});
+document.getElementById('themeBtns').addEventListener('click',function(e){
+  const b=e.target.closest('button[data-theme]');
+  if(b) setTheme(b.getAttribute('data-theme'));
+});
+document.getElementById('fontBtns').addEventListener('click',function(e){
+  const b=e.target.closest('button[data-fs]');
+  if(b) setFontSize(b.getAttribute('data-fs'));
+});
 // ---- Backup & Restore (offline, device only) ----
 // Backup: one JSON file with ALL transactions + hero/tab settings.
 // Restore: validates the file, asks for confirmation, then replaces
@@ -1074,7 +1141,9 @@ function backupSettings(){
     activeTab: activeTab,
     incCats: incCats.slice(),
     expCats: expCats.slice(),
-    currencies: curs.map(c=>({name:c.name,code:c.code,symbol:c.symbol}))
+    currencies: curs.map(c=>({name:c.name,code:c.code,symbol:c.symbol,color:c.color||''})),
+    theme: appTheme,
+    fontSize: appFontSize
   };
 }
 function downloadTextFile(filename, text, mime){
@@ -1165,6 +1234,9 @@ document.getElementById('restoreFile').addEventListener('change',function(){
     heroLocked=!!heroPin && st.heroLocked!=='0';
     if(heroLocked) localStorage.setItem('finance_hero_locked','1'); else localStorage.setItem('finance_hero_locked','0');
     if(['home','details','settings'].includes(st.activeTab)) activeTab=st.activeTab;
+    if(THEMES.includes(st.theme)){ appTheme=st.theme; localStorage.setItem('finance_theme', appTheme); }
+    if(FONT_SIZES.includes(st.fontSize)){ appFontSize=st.fontSize; localStorage.setItem('finance_font_size', appFontSize); }
+    applyAppearance();
     window.switchTab(activeTab); render();
     alert('تمت الاستعادة بنجاح — '+valid.length+' حركة، '+validDebts.length+' دين.');
   };
