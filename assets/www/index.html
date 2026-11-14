@@ -213,6 +213,13 @@ input[type=date]{direction:ltr;text-align:right}
 <select id="filterCur"><option value="">كل العملات</option><option value="SYP">ليرة سورية</option><option value="USD">دولار</option><option value="EUR">يورو</option></select>
 <select id="filterWallet"><option value="">كل المحافظ</option><option value="cash">كاش</option><option value="sham">شام كاش</option></select>
 </div>
+<div class="search-row">
+<label style="margin:0;align-self:center">📅 من</label>
+<input id="filterFrom" type="date">
+<label style="margin:0;align-self:center">إلى</label>
+<input id="filterTo" type="date">
+<button class="btn secondary" id="clearDateFilter" type="button" style="margin-top:0;padding:9px 12px">✖ مسح</button>
+</div>
 <div id="list"></div>
 </div>
 </section>
@@ -691,9 +698,10 @@ function render(){
   // List (search + filters)
   const q=(document.getElementById('search').value||'').trim();
   const ft=document.getElementById('filterType').value, fc=document.getElementById('filterCur').value, fw=document.getElementById('filterWallet').value;
+  const fd=document.getElementById('filterFrom').value, td=document.getElementById('filterTo').value;
   const sorted=[...txs].sort((a,b)=> (b.date||'').localeCompare(a.date||'') || (b.createdAt||0)-(a.createdAt||0));
   const shown=sorted.filter(t=>{
-    if(ft&&t.type!==ft) return false; if(fc&&t.currency!==fc) return false; if(fw&&t.wallet!==fw) return false;
+    if(ft&&t.type!==ft) return false; if(fc&&t.currency!==fc) return false; if(fw&&t.wallet!==fw) return false; if(fd&&(t.date||'')<fd) return false; if(td&&(t.date||'')>td) return false;
     if(q && !((t.desc||'')+' '+(t.category||'')+' '+(t.note||'')).includes(q)) return false; return true;
   });
   const list=document.getElementById('list');
@@ -720,8 +728,12 @@ window.editTx=function(id){
 };
 window.delTx=async function(id){
   const t=txs.find(x=>x.id===id);
-  const msg=t?('حذف هذه العملية؟\n'+(t.type==='income'?'قبض':'دفع')+' — '+t.category+' • '+fmt(t.amount)+' '+t.currency+' • '+t.date):'حذف هذه العملية؟';
+  const msg=t?('حذف هذه العملية؟\n'+(t.type==='income'?'قبض':'دفع')+' — '+t.category+' • '+fmt(t.amount)+' '+t.currency+' • '+t.date+(t.debtId?'\n⚠️ هذه الحركة دفعة دين — حذفها سيُرجع المبلغ المسدد في الدين.':'')):'حذف هذه العملية؟';
   if(!(await askConfirm(msg))) return;
+  if(t&&t.debtId){
+    const d=debts.find(function(x){ return x.id===t.debtId; });
+    if(d){ d.paid=Math.max(0,(+d.paid||0)-(+t.debtAmt||0)); saveDebts(); }
+  }
   txs=txs.filter(x=>x.id!==id); save(); render();
 };
 // ---- Transaction details modal: tap a card -> full details + edit/delete ----
@@ -863,7 +875,7 @@ async function recordDebtPayment(d, amt){
   const isOwed=d.type==='owed';
   const msg='هل تريد تسجيل هذه الدفعة كحركة نقدية الآن؟\n'+(isOwed?'قبض ':'دفع ')+fmt(amt)+' '+d.currency+' — '+(isOwed?'من ':'إلى ')+d.person+'\nإذا اخترت «إلغاء» يُسجَّل السداد في الدين فقط ولا يتغير الرصيد.';
   if(!(await askConfirm(msg,'تسجيل كحركة نقدية؟'))) return;
-  txs.push({id:'tx'+Date.now()+Math.floor(Math.random()*1000),createdAt:Date.now(),type:isOwed?'income':'expense',amount:amt,currency:d.currency,wallet:'cash',date:todayISO(),category:isOwed?'سداد دين':'تسديد دين',desc:(isOwed?'سداد دين من ':'تسديد دين إلى ')+d.person,note:'دين بتاريخ '+d.date});
+  txs.push({id:'tx'+Date.now()+Math.floor(Math.random()*1000),createdAt:Date.now(),type:isOwed?'income':'expense',amount:amt,currency:d.currency,wallet:'cash',date:todayISO(),category:isOwed?'سداد دين':'تسديد دين',desc:(isOwed?'سداد دين من ':'تسديد دين إلى ')+d.person,note:'دين بتاريخ '+d.date,debtId:d.id,debtAmt:amt});
   save();
 }
 window.debtPay=async function(id){
@@ -913,12 +925,28 @@ document.getElementById('form').addEventListener('submit',e=>{
   if(!desc){ alert('أدخل البيان'); return; }
   const data={type,amount,currency:document.getElementById('currency').value,wallet:document.getElementById('wallet').value,date,category:document.getElementById('category').value,desc,note:document.getElementById('note').value.trim()};
   const eid=document.getElementById('editId').value;
-  if(eid){ const i=txs.findIndex(x=>x.id===eid); if(i>=0) txs[i]={...txs[i],...data}; document.getElementById('editId').value=''; document.getElementById('cancelEdit').style.display='none'; }
+  if(eid){
+    const i=txs.findIndex(x=>x.id===eid);
+    if(i>=0){
+      const old=txs[i];
+      txs[i]={...old,...data};
+      if(old.debtId){
+        const d=debts.find(function(x){ return x.id===old.debtId; });
+        if(d){
+          if(data.type!==old.type||data.currency!==old.currency){ d.paid=Math.max(0,(+d.paid||0)-(+old.debtAmt||0)); delete txs[i].debtId; delete txs[i].debtAmt; }
+          else if(+data.amount!==+old.amount){ d.paid=Math.max(0,Math.min(+d.amount,(+d.paid||0)+(+data.amount-+old.amount))); txs[i].debtAmt=+data.amount; }
+          saveDebts();
+        } else { delete txs[i].debtId; delete txs[i].debtAmt; }
+      }
+    }
+    document.getElementById('editId').value=''; document.getElementById('cancelEdit').style.display='none';
+  }
   else txs.push({id:'tx'+Date.now()+Math.floor(Math.random()*1000),createdAt:Date.now(),...data});
   save(); e.target.reset(); document.getElementById('txDate').value=todayISO(); setCats(); render();
 });
 document.getElementById('periodFilters').addEventListener('click',e=>{ if(e.target.dataset.p){ period=e.target.dataset.p; document.querySelectorAll('#periodFilters button').forEach(b=>b.classList.toggle('active',b===e.target)); render(); } });
-['search','filterType','filterCur','filterWallet'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+['search','filterType','filterCur','filterWallet','filterFrom','filterTo'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+document.getElementById('clearDateFilter').onclick=function(){ document.getElementById('filterFrom').value=''; document.getElementById('filterTo').value=''; render(); };
 function summaryRows(list){
   const rows=[];
   Object.keys(CUR).forEach(c=>{
@@ -937,7 +965,8 @@ document.getElementById('exportBtn').onclick=()=>{
   if(typeof XLSX==='undefined'){ alert('مكتبة Excel غير متوفرة في هذه النسخة'); return; }
   const q=(document.getElementById('search').value||'').trim();
   const ft=document.getElementById('filterType').value, fc=document.getElementById('filterCur').value, fw=document.getElementById('filterWallet').value;
-  const shown=[...txs].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).filter(t=>{ if(ft&&t.type!==ft) return false; if(fc&&t.currency!==fc) return false; if(fw&&t.wallet!==fw) return false; if(q && !((t.desc||'')+' '+(t.category||'')+' '+(t.note||'')).includes(q)) return false; return true; });
+  const fd=document.getElementById('filterFrom').value, td=document.getElementById('filterTo').value;
+  const shown=[...txs].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).filter(t=>{ if(ft&&t.type!==ft) return false; if(fc&&t.currency!==fc) return false; if(fw&&t.wallet!==fw) return false; if(fd&&(t.date||'')<fd) return false; if(td&&(t.date||'')>td) return false; if(q && !((t.desc||'')+' '+(t.category||'')+' '+(t.note||'')).includes(q)) return false; return true; });
   const txRows=shown.map(t=>({ 'التاريخ':t.date, 'النوع':t.type==='income'?'قبض':'دفع', 'البيان':t.desc, 'الفئة':t.category, 'العملة':curName(t.currency), 'المحفظة':WALLET[t.wallet], 'المبلغ':+t.amount, 'ملاحظات':t.note||'' }));
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(txRows.length?txRows:[{'التاريخ':'','النوع':'','البيان':'لا توجد حركات','الفئة':'','العملة':'','المحفظة':'','المبلغ':0,'ملاحظات':''}]), 'الحركات');
