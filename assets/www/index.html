@@ -224,8 +224,13 @@ input[type=date]{direction:ltr;text-align:right}
 <h2>سجل الحركات</h2>
 <div class="search-row">
 <input id="search" type="search" placeholder="🔍 ابحث في البيان أو الفئة...">
-<select id="filterType"><option value="">كل الأنواع</option><option value="income">قبض</option><option value="expense">دفع</option></select>
 </div>
+<div class="filters" id="typeFilterBtns">
+<button type="button" data-t="" class="active">الكل</button>
+<button type="button" data-t="income">⬇ قبض</button>
+<button type="button" data-t="expense">⬆ دفع</button>
+</div>
+<input type="hidden" id="filterType" value="">
 <div class="search-row">
 <select id="filterCur"><option value="">كل العملات</option><option value="SYP">ليرة سورية</option><option value="USD">دولار</option><option value="EUR">يورو</option></select>
 <select id="filterWallet"><option value="">كل المحافظ</option><option value="cash">كاش</option><option value="sham">شام كاش</option></select>
@@ -647,27 +652,35 @@ function periodName(){
   return {today:'اليوم',week:'هذا الأسبوع (آخر 7 أيام)',month:'هذا الشهر',lastmonth:'الشهر الماضي',all:'كل الفترات'}[period];
 }
 
-// ---- Donut charts (pure SVG, offline, no libraries) ----
+// ---- Pie charts / قرص (pure SVG, offline, no libraries) — no centre total: summing different currencies is meaningless ----
 const DONUT_COLORS=['#0b6e4f','#0369a1','#7c3aed','#b45309','#b42318','#0e7490','#65a30d','#db2777'];
-function donutHTML(entries, centerLabel){
+function pieHTML(entries){
   const total=entries.reduce(function(s,e){ return s+e[1]; },0);
   if(!total) return '<p class="empty">—</p>';
   const top=entries.slice(0,6);
   const rest=entries.slice(6).reduce(function(s,e){ return s+e[1]; },0);
   if(rest>0) top.push(['أخرى',rest]);
-  const R=60, C=2*Math.PI*R;
-  let off=0;
-  const segs=top.map(function(e,i){
-    const frac=e[1]/total, len=frac*C;
-    const s='<circle cx="70" cy="70" r="'+R+'" fill="none" stroke="'+DONUT_COLORS[i%DONUT_COLORS.length]+'" stroke-width="26" stroke-dasharray="'+len+' '+(C-len)+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 70 70)"/>';
-    off+=len;
-    return s;
-  }).join('');
+  const R=68, CX=70, CY=70;
+  let segs='';
+  if(top.length===1){
+    segs='<circle cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="'+DONUT_COLORS[0]+'"/>';
+  } else {
+    let a0=-Math.PI/2;
+    segs=top.map(function(e,i){
+      const frac=e[1]/total, a1=a0+frac*2*Math.PI;
+      const x0=(CX+R*Math.cos(a0)).toFixed(2), y0=(CY+R*Math.sin(a0)).toFixed(2);
+      const x1=(CX+R*Math.cos(a1)).toFixed(2), y1=(CY+R*Math.sin(a1)).toFixed(2);
+      const large=frac>0.5?1:0;
+      const d='M '+CX+','+CY+' L '+x0+','+y0+' A '+R+','+R+' 0 '+large+' 1 '+x1+','+y1+' Z';
+      a0=a1;
+      return '<path d="'+d+'" fill="'+DONUT_COLORS[i%DONUT_COLORS.length]+'" style="stroke:var(--card);stroke-width:1"/>';
+    }).join('');
+  }
   const legend=top.map(function(e,i){
     const pct=Math.round(e[1]/total*100);
     return '<div class="bar-row"><span><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:'+DONUT_COLORS[i%DONUT_COLORS.length]+';margin-inline-end:6px"></i>'+e[0]+'</span><b>'+fmt(e[1])+' ('+pct+'%)</b></div>';
   }).join('');
-  return '<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><svg width="140" height="140" viewBox="0 0 140 140">'+segs+'<text x="70" y="66" text-anchor="middle" font-size="16" font-weight="800" style="fill:var(--text)">'+fmt(total)+'</text><text x="70" y="84" text-anchor="middle" font-size="11" style="fill:var(--muted)">'+centerLabel+'</text></svg><div style="flex:1;min-width:160px">'+legend+'</div></div>';
+  return '<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><svg width="140" height="140" viewBox="0 0 140 140">'+segs+'</svg><div style="flex:1;min-width:160px">'+legend+'</div></div>';
 }
 
 function renderHomeDebts(){
@@ -759,19 +772,25 @@ function render(){
     const map={}; ptx.filter(t=>t.type===kind).forEach(t=>{ const k=t.category+' ('+curName(t.currency)+')'; map[k]=(map[k]||0)+ +t.amount; });
     const entries=Object.entries(map).sort((a,b)=>b[1]-a[1]);
     if(!entries.length) return '<p class="empty">—</p>';
-    return donutHTML(entries, kind==='expense'?'مصروف':'قبض');
+    return pieHTML(entries);
   }
   function walletSplit(kind){
-    const c=ptx.filter(t=>t.type===kind&&t.wallet==='cash').reduce((s,t)=>s+ +t.amount,0);
-    const sh=ptx.filter(t=>t.type===kind&&t.wallet==='sham').reduce((s,t)=>s+ +t.amount,0);
-    return '<div style="margin-top:8px"><div class="bar-row"><span>💵 من كاش</span><b>'+fmt(c)+'</b></div><div class="bar-row"><span>📱 من شام كاش</span><b>'+fmt(sh)+'</b></div></div>';
+    // Per currency — never sum different currencies together
+    let out='';
+    Object.keys(CUR).forEach(function(c){
+      const cash=ptx.filter(t=>t.type===kind&&t.currency===c&&t.wallet==='cash').reduce((s,t)=>s+ +t.amount,0);
+      const sham=ptx.filter(t=>t.type===kind&&t.currency===c&&t.wallet==='sham').reduce((s,t)=>s+ +t.amount,0);
+      if(!cash&&!sham) return;
+      out+='<div class="bar-row"><span><span class="tag-pill" style="background:'+curColor(c)+'">'+c+'</span>'+CUR[c]+'</span><span>💵 كاش '+fmt(cash)+' • 📱 شام كاش '+fmt(sham)+'</span></div>';
+    });
+    return out?'<div style="margin-top:8px">'+out+'</div>':'';
   }
   document.getElementById('spentByCat').innerHTML=byCat('expense')+walletSplit('expense');
   document.getElementById('incByCat').innerHTML=byCat('income')+walletSplit('income');
   const wd=document.getElementById('walletDonut');
   if(wd){
     const cashRem=bal(heroCur,'cash'), shamRem=bal(heroCur,'sham');
-    wd.innerHTML=donutHTML([['💵 كاش',Math.max(0,cashRem)],['📱 شام كاش',Math.max(0,shamRem)]], CUR[heroCur]);
+    wd.innerHTML=pieHTML([['💵 كاش',Math.max(0,cashRem)],['📱 شام كاش',Math.max(0,shamRem)]]);
   }
   renderHomeDebts();
   // List (search + filters)
@@ -1028,6 +1047,7 @@ document.getElementById('periodFilters').addEventListener('click',e=>{ if(e.targ
 document.getElementById('clearReportDates').onclick=function(){ document.getElementById('reportFrom').value=''; document.getElementById('reportTo').value=''; period='all'; render(); };
 ['search','filterType','filterCur','filterWallet','filterFrom','filterTo'].forEach(id=>document.getElementById(id).addEventListener('input',render));
 document.getElementById('clearDateFilter').onclick=function(){ document.getElementById('filterFrom').value=''; document.getElementById('filterTo').value=''; render(); };
+document.getElementById('typeFilterBtns').addEventListener('click',e=>{ const t=e.target&&e.target.dataset?e.target.dataset.t:undefined; if(t===undefined) return; document.getElementById('filterType').value=t; document.querySelectorAll('#typeFilterBtns button').forEach(b=>b.classList.toggle('active',b===e.target)); render(); });
 function summaryRows(list){
   const rows=[];
   Object.keys(CUR).forEach(c=>{
