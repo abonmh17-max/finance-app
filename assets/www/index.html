@@ -6,10 +6,10 @@
 <title>تنظيم النفقات المالية</title>
 <style>
 *{box-sizing:border-box}
-:root{--bg:#f2f4f7;--card:#fff;--soft:#f8fafc;--text:#1a2530;--muted:#64748b;--muted2:#334155;--border:#e2e8f0;--border2:#cbd5d1;--accent:#0b6e4f;--accent-dark:#0b4a6f;--green:#0b6e4f;--red:#b42318;--hero1:#0aa58a;--hero2:#0b6e4f;--hero3:#084d38;--chip:#f1f5f9;--tint:#ecfdf5}
-body[data-theme="dark"]{--bg:#0f172a;--card:#1e293b;--soft:#16213a;--text:#e2e8f0;--muted:#94a3b8;--muted2:#cbd5e1;--border:#334155;--border2:#475569;--accent:#10b981;--accent-dark:#38bdf8;--green:#34d399;--red:#f87171;--hero1:#0d9488;--hero2:#065f46;--hero3:#022c22;--chip:#243247;--tint:#052e22}
-body[data-theme="midnight"]{--bg:#0b1220;--card:#16213a;--soft:#1b2a4a;--text:#e8eefc;--muted:#93a5cf;--muted2:#c7d3ee;--border:#2a3a5f;--border2:#3b4f7d;--accent:#3b82f6;--accent-dark:#60a5fa;--green:#4ade80;--red:#f87171;--hero1:#2563eb;--hero2:#1d4ed8;--hero3:#172554;--chip:#1e2c4f;--tint:#172554}
-body[data-theme="violet"]{--bg:#f5f3ff;--card:#fff;--soft:#ede9fe;--text:#2e1065;--muted:#7c6aa8;--muted2:#5b21b6;--border:#ddd6fe;--border2:#c4b5fd;--accent:#7c3aed;--accent-dark:#6d28d9;--green:#059669;--red:#dc2626;--hero1:#8b5cf6;--hero2:#7c3aed;--hero3:#4c1d95;--chip:#ede9fe;--tint:#ede9fe}
+:root{--bg:#f2f4f7;--card:#fff;--soft:#f8fafc;--text:#1a2530;--muted:#64748b;--muted2:#334155;--border:#e2e8f0;--border2:#cbd5d1;--accent:#0b6e4f;--accent-dark:#0b4a6f;--green:#0b6e4f;--red:#b42318;--hero1:#0aa58a;--hero2:#0b6e4f;--hero3:#084d38;--chip:#f1f5f9;--tint:#ecfdf5;--tint-inc:#e8f8f1;--tint-exp:#fdf0ef;--tint-paid:#f1f5f9;--tint-overdue:#fde8e8}
+body[data-theme="dark"]{--bg:#0f172a;--card:#1e293b;--soft:#16213a;--text:#e2e8f0;--muted:#94a3b8;--muted2:#cbd5e1;--border:#334155;--border2:#475569;--accent:#10b981;--accent-dark:#38bdf8;--green:#34d399;--red:#f87171;--hero1:#0d9488;--hero2:#065f46;--hero3:#022c22;--chip:#243247;--tint:#052e22;--tint-inc:#14352a;--tint-exp:#3d1f1f;--tint-paid:#263449;--tint-overdue:#4a1d1d}
+body[data-theme="midnight"]{--bg:#0b1220;--card:#16213a;--soft:#1b2a4a;--text:#e8eefc;--muted:#93a5cf;--muted2:#c7d3ee;--border:#2a3a5f;--border2:#3b4f7d;--accent:#3b82f6;--accent-dark:#60a5fa;--green:#4ade80;--red:#f87171;--hero1:#2563eb;--hero2:#1d4ed8;--hero3:#172554;--chip:#1e2c4f;--tint:#172554;--tint-inc:#14352a;--tint-exp:#3d1f1f;--tint-paid:#1e2c4f;--tint-overdue:#4a1d1d}
+body[data-theme="violet"]{--bg:#f5f3ff;--card:#fff;--soft:#ede9fe;--text:#2e1065;--muted:#7c6aa8;--muted2:#5b21b6;--border:#ddd6fe;--border2:#c4b5fd;--accent:#7c3aed;--accent-dark:#6d28d9;--green:#059669;--red:#dc2626;--hero1:#8b5cf6;--hero2:#7c3aed;--hero3:#4c1d95;--chip:#ede9fe;--tint:#ede9fe;--tint-inc:#e8f8f1;--tint-exp:#fdf0ef;--tint-paid:#f1f5f9;--tint-overdue:#fde8e8}
 html.fs-small{zoom:.9}
 html.fs-large{zoom:1.15}
 body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text)}
@@ -813,7 +813,7 @@ function render(){
     const sign=t.type==='income'?'+':'−';
     const head=(t.date!==prevDate)?'<div class="date-head">📅 '+weekdayName(t.date)+' '+t.date+'</div>':'';
     prevDate=t.date;
-    const cardStyle=t.type==='income'?' style="border-inline-start:4px solid var(--green)"':' style="border-inline-start:4px solid var(--red)"';
+    const cardStyle=t.type==='income'?' style="background:var(--tint-inc);border-inline-start:4px solid var(--green)"':' style="background:var(--tint-exp);border-inline-start:4px solid var(--red)"';
     return head+'<div class="tx"'+cardStyle+' onclick="showTx(\''+t.id+'\')"><div class="top"><div><b>'+(t.type==='income'?'⬇ قبض':'⬆ دفع')+' — '+t.category+'</b><span class="date-badge">📅 '+weekdayName(t.date)+' '+t.date+'</span><div class="meta">'+t.desc+' • '+curName(t.currency)+' • '+WALLET[t.wallet]+'</div>'+(t.note?'<div class="meta">📝 ملاحظات: '+t.note+'</div>':'')+'</div><div class="amt '+(t.type==='income'?'in':'out')+'">'+sign+' '+fmt(t.amount)+' '+t.currency+'</div></div></div>';
   }).join('');
 }
@@ -917,10 +917,10 @@ function renderDebts(){
     const badge=st==='paid'?'✅ مسدد بالكامل':(st==='partial'?'🟡 مسدد جزئياً':'🔴 قائم');
     const overdue=(d.due && st!=='paid' && d.due<todayISO());
     let style='';
-    if(st==='paid') style=' style="border-inline-start:4px solid #64748b"';
-    else if(d.type==='owed') style=' style="border-inline-start:4px solid var(--green)"';
-    else style=' style="border-inline-start:4px solid var(--red)"';
-    if(overdue) style=' style="border-inline-start:4px solid var(--red);border-color:var(--red)"';
+    if(st==='paid') style=' style="background:var(--tint-paid);border-inline-start:4px solid #64748b"';
+    else if(d.type==='owed') style=' style="background:var(--tint-inc);border-inline-start:4px solid var(--green)"';
+    else style=' style="background:var(--tint-exp);border-inline-start:4px solid var(--red)"';
+    if(overdue) style=' style="background:var(--tint-overdue);border-inline-start:4px solid var(--red);border-color:var(--red)"';
     return '<div class="tx"'+style+'><div class="top"><div>'+label+' <b>'+escAttr(d.person)+'</b><span class="date-badge">📅 '+d.date+'</span><div class="meta">'+badge+' • '+curName(d.currency)+debtDueInfo(d)+'</div><div class="meta">المبلغ: '+fmt(d.amount)+' '+d.currency+' • المسدد: '+fmt(d.paid||0)+' • المتبقي: '+fmt(rem)+'</div>'+(d.note?'<div class="meta">📝 '+escAttr(d.note)+'</div>':'')+'</div><div class="amt '+cls+'">'+fmt(rem)+' '+d.currency+'</div></div><div class="actions">'+(st!=='paid'?'<button onclick="debtPay(\''+d.id+'\')">💰 تسجيل دفعة</button><button onclick="debtSettle(\''+d.id+'\')">✅ تسديد كامل</button>':'')+((+d.paid||0)>0?'<button onclick="debtEditPaid(\''+d.id+'\')">✏️ تعديل المسدد</button>':'')+'<button onclick="editDebt(\''+d.id+'\')">✏️ تعديل</button><button onclick="delDebt(\''+d.id+'\')">🗑️ حذف</button></div></div>';
   }).join('');
 }
