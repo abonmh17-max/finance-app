@@ -6,10 +6,10 @@
 <title>تنظيم النفقات المالية</title>
 <style>
 *{box-sizing:border-box}
-:root{--bg:#f2f4f7;--card:#fff;--soft:#f8fafc;--text:#1a2530;--muted:#64748b;--muted2:#334155;--border:#e2e8f0;--border2:#cbd5d1;--accent:#0b6e4f;--accent-dark:#0b4a6f;--green:#0b6e4f;--red:#b42318;--hero1:#0aa58a;--hero2:#0b6e4f;--hero3:#084d38;--chip:#f1f5f9}
-body[data-theme="dark"]{--bg:#0f172a;--card:#1e293b;--soft:#16213a;--text:#e2e8f0;--muted:#94a3b8;--muted2:#cbd5e1;--border:#334155;--border2:#475569;--accent:#10b981;--accent-dark:#38bdf8;--green:#34d399;--red:#f87171;--hero1:#0d9488;--hero2:#065f46;--hero3:#022c22;--chip:#243247}
-body[data-theme="midnight"]{--bg:#0b1220;--card:#16213a;--soft:#1b2a4a;--text:#e8eefc;--muted:#93a5cf;--muted2:#c7d3ee;--border:#2a3a5f;--border2:#3b4f7d;--accent:#3b82f6;--accent-dark:#60a5fa;--green:#4ade80;--red:#f87171;--hero1:#2563eb;--hero2:#1d4ed8;--hero3:#172554;--chip:#1e2c4f}
-body[data-theme="violet"]{--bg:#f5f3ff;--card:#fff;--soft:#ede9fe;--text:#2e1065;--muted:#7c6aa8;--muted2:#5b21b6;--border:#ddd6fe;--border2:#c4b5fd;--accent:#7c3aed;--accent-dark:#6d28d9;--green:#059669;--red:#dc2626;--hero1:#8b5cf6;--hero2:#7c3aed;--hero3:#4c1d95;--chip:#ede9fe}
+:root{--bg:#f2f4f7;--card:#fff;--soft:#f8fafc;--text:#1a2530;--muted:#64748b;--muted2:#334155;--border:#e2e8f0;--border2:#cbd5d1;--accent:#0b6e4f;--accent-dark:#0b4a6f;--green:#0b6e4f;--red:#b42318;--hero1:#0aa58a;--hero2:#0b6e4f;--hero3:#084d38;--chip:#f1f5f9;--tint:#ecfdf5}
+body[data-theme="dark"]{--bg:#0f172a;--card:#1e293b;--soft:#16213a;--text:#e2e8f0;--muted:#94a3b8;--muted2:#cbd5e1;--border:#334155;--border2:#475569;--accent:#10b981;--accent-dark:#38bdf8;--green:#34d399;--red:#f87171;--hero1:#0d9488;--hero2:#065f46;--hero3:#022c22;--chip:#243247;--tint:#052e22}
+body[data-theme="midnight"]{--bg:#0b1220;--card:#16213a;--soft:#1b2a4a;--text:#e8eefc;--muted:#93a5cf;--muted2:#c7d3ee;--border:#2a3a5f;--border2:#3b4f7d;--accent:#3b82f6;--accent-dark:#60a5fa;--green:#4ade80;--red:#f87171;--hero1:#2563eb;--hero2:#1d4ed8;--hero3:#172554;--chip:#1e2c4f;--tint:#172554}
+body[data-theme="violet"]{--bg:#f5f3ff;--card:#fff;--soft:#ede9fe;--text:#2e1065;--muted:#7c6aa8;--muted2:#5b21b6;--border:#ddd6fe;--border2:#c4b5fd;--accent:#7c3aed;--accent-dark:#6d28d9;--green:#059669;--red:#dc2626;--hero1:#8b5cf6;--hero2:#7c3aed;--hero3:#4c1d95;--chip:#ede9fe;--tint:#ede9fe}
 html.fs-small{zoom:.9}
 html.fs-large{zoom:1.15}
 body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text)}
@@ -124,6 +124,7 @@ input[type=date]{direction:ltr;text-align:right}
 .btn:active{transform:scale(.98)}
 .bottomnav button:active{background:#f0fdf4}
 .debt-due{color:var(--red);font-weight:800}
+.tag-pill{display:inline-block;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:800;color:#fff;line-height:1.5;vertical-align:middle;margin-inline-end:6px}
 
 </style>
 </head>
@@ -147,8 +148,11 @@ input[type=date]{direction:ltr;text-align:right}
 <div class="hero-tabs" id="heroTabs"></div>
 <div class="hero-main" id="heroMain"></div>
 <div class="hero-mini" id="heroBalances"></div>
-<div class="hero-mini" id="heroDebts"></div>
 <div class="hero-lockrow" id="heroLockRow"></div>
+</div>
+<div class="card" id="homeDebtsCard">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h2 style="margin:0">الديون</h2><button class="btn small secondary" type="button" style="margin-top:0" onclick="window.switchTab('debts')">عرض الكل ←</button></div>
+<div id="homeDebtsBody"></div>
 </div>
 </section>
 
@@ -156,7 +160,7 @@ input[type=date]{direction:ltr;text-align:right}
 <div class="card">
 <h2>إضافة عملية جديدة</h2>
 <div class="voice-row"><button class="btn" id="micBtn" type="button" style="background:#7c3aed;margin-top:0;flex:1">🎙️ إدخال صوتي — تحدث بالعربية</button><button class="info-btn" type="button" title="كيف يعمل الإدخال الصوتي؟" data-info="مثال: «دفعت 5000 ليرة سورية كاش للطعام اليوم» أو «قبضت 300 دولار شام كاش راتب». سيظهر النص وما فهمناه كمسودة للمراجعة — ولا يُحفظ شيء قبل أن تضغط «حفظ» بنفسك.">ⓘ</button></div>
-<div id="voiceBox" style="display:none;background:#f5f3ff;border:1px solid #c4b5fd;border-radius:10px;padding:10px"></div>
+<div id="voiceBox" style="display:none;background:var(--soft);border:1px solid var(--border);border-radius:10px;padding:10px"></div>
 <div class="tabs">
 <button id="tabInc" type="button" class="active-inc">⬇ قبض</button>
 <button id="tabExp" type="button">⬆ دفع</button>
@@ -278,7 +282,7 @@ input[type=date]{direction:ltr;text-align:right}
 <section id="pageSettings" class="tabpage">
 <div class="card">
 <h2>🔒 قفل الرصيد <button class="info-btn" type="button" title="ما هو القفل؟" data-info="🔒 القفل شاشة خصوصية على جهازك فقط وليس حماية بنكية — الرقم محفوظ على جهازك، ومن يستطيع فتح هاتفك قد يصل للبيانات. «نسيت الرقم؟» يزيل القفل فقط ولا يحذف أي عملية.">ⓘ</button></h2>
-<p class="hint" id="settingsLockStatus" style="font-size:14px;color:#334155"></p>
+<p class="hint" id="settingsLockStatus" style="font-size:14px;color:var(--muted2)"></p>
 <div id="settingsLockBtns" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
 </div>
 <div class="card">
@@ -314,7 +318,7 @@ input[type=date]{direction:ltr;text-align:right}
 <div class="cat-input-row"><input id="newCurCode" type="text" placeholder="الرمز — مثال: GBP" maxlength="3"><input id="newCurSymbol" type="text" placeholder="الإشارة — مثال: £" maxlength="4"><input id="newCurColor" type="color" value="#2563eb" title="لون العملة" style="flex:0 0 46px;padding:2px"></div>
 <button class="btn secondary" id="addCur" type="button">➕ إضافة عملة</button>
 </div>
-<div class="card" style="border:2px solid #0b6e4f;background:#ecfdf5">
+<div class="card" style="border:2px solid var(--accent);background:var(--tint)">
 <h2 style="margin-top:0">💾 النسخة الاحتياطية والاستعادة <button class="info-btn" type="button" title="ما هي النسخة الاحتياطية؟" data-info="احفظ نسخة من كل حركاتك وإعداداتك في ملف واحد، واستعدها في أي وقت — قبل إعادة تثبيت التطبيق أو تغيير الهاتف. النسخة الاحتياطية ملف واحد يشمل كل حركاتك وإعداداتك (العملة المختارة، الإخفاء، القفل والرقم، آخر تبويب). احتفظ به في مكان آمن — فهو يحتوي كل بياناتك، ومنه تستعيد كل شيء بعد إعادة تثبيت التطبيق. الاستعادة تستبدل كل الحركات الحالية بعد تأكيدك.">ⓘ</button></h2>
 <div style="display:flex;gap:10px;margin-top:12px">
 <button class="btn" id="backupBtn" type="button" style="flex:1;font-size:19px;font-weight:800;padding:16px 8px;margin-top:0;background:#0b6e4f">💾 أخذ نسخة احتياطية</button>
@@ -360,9 +364,9 @@ input[type=date]{direction:ltr;text-align:right}
 <div id="detailModal" class="pin-overlay" style="display:none">
 <div class="pin-box" style="text-align:right">
 <h3 id="detailTitle">تفاصيل العملية</h3>
-<div id="detailBody" style="font-size:15px;line-height:2;color:#0f172a;margin-top:10px"></div>
+<div id="detailBody" style="font-size:15px;line-height:2;color:var(--text);margin-top:10px"></div>
 <div class="confirm-actions">
-<button class="btn" id="detailEdit" type="button" style="background:#0b6e4f">✏️ تعديل</button>
+<button class="btn" id="detailEdit" type="button">✏️ تعديل</button>
 <button class="btn confirm-ok" id="detailDel" type="button">🗑️ حذف</button>
 </div>
 <button class="btn secondary" id="detailClose" type="button" style="margin-top:10px">إغلاق</button>
@@ -372,7 +376,7 @@ input[type=date]{direction:ltr;text-align:right}
 <div id="confirmModal" class="pin-overlay" style="display:none">
 <div class="pin-box">
 <h3 id="confirmTitle">هل تريد تأكيد الحذف؟</h3>
-<p class="hint" id="confirmMsg" style="font-size:15px;line-height:1.9;white-space:pre-line;color:#334155"></p>
+<p class="hint" id="confirmMsg" style="font-size:15px;line-height:1.9;white-space:pre-line;color:var(--muted2)"></p>
 <div class="confirm-actions">
 <button class="btn confirm-ok" id="confirmOk" type="button">موافق</button>
 <button class="btn secondary" id="confirmCancel" type="button">إلغاء</button>
@@ -509,14 +513,14 @@ const LS_KEY='finance_transactions_v1';
 // CUR is rebuilt from `curs` whenever the list changes, so hero tabs, balances,
 // report and export all read the same list. Old TRY transactions stay stored
 // and listed (CUR_OLD) but are excluded from new totals.
-const DEF_CURS=[{name:'ليرة سورية',code:'SYP',symbol:'ل.س',color:'#2563eb'},{name:'دولار',code:'USD',symbol:'$',color:'#0b6e4f'},{name:'يورو',code:'EUR',symbol:'€',color:'#7c3aed'}];
-const CUR_COLORS={SYP:'#2563eb',USD:'#0b6e4f',EUR:'#7c3aed'};
-const CUR_PALETTE=['#2563eb','#0b6e4f','#7c3aed','#b45309','#be185d','#0891b2','#4d7c0f','#b42318'];
+const DEF_CURS=[{name:'ليرة سورية',code:'SYP',symbol:'ل.س',color:'#b45309'},{name:'دولار',code:'USD',symbol:'$',color:'#0b6e4f'},{name:'يورو',code:'EUR',symbol:'€',color:'#7c3aed'}];
+const CUR_COLORS={SYP:'#b45309',USD:'#0b6e4f',EUR:'#7c3aed'};
+const CUR_PALETTE=['#b45309','#0b6e4f','#7c3aed','#2563eb','#be185d','#0891b2','#4d7c0f','#b42318'];
 function validColor(v){ return typeof v==='string'&&/^#[0-9a-fA-F]{6}$/.test(v)?v.toLowerCase():null; }
 function curColor(code){ const c=curs.find(function(x){ return x.code===code; }); return (c&&validColor(c.color))||CUR_COLORS[code]||'#0b4a6f'; }
 function validCurs(v){
   if(!Array.isArray(v)) return null;
-  const ok=v.filter(c=>c&&typeof c.name==='string'&&c.name.trim()&&typeof c.code==='string'&&/^[A-Za-z]{3}$/.test(c.code.trim())).map(function(c,i){ const code=c.code.trim().toUpperCase(); return {name:c.name.trim(),code:code,symbol:typeof c.symbol==='string'?c.symbol.trim().slice(0,4):'',color:validColor(c.color)||CUR_COLORS[code]||CUR_PALETTE[i%CUR_PALETTE.length]}; });
+  const ok=v.filter(c=>c&&typeof c.name==='string'&&c.name.trim()&&typeof c.code==='string'&&/^[A-Za-z]{3}$/.test(c.code.trim())).map(function(c,i){ const code=c.code.trim().toUpperCase(); let col=validColor(c.color)||CUR_COLORS[code]||CUR_PALETTE[i%CUR_PALETTE.length]; if(code==='SYP'&&col==='#2563eb') col='#b45309'; return {name:c.name.trim(),code:code,symbol:typeof c.symbol==='string'?c.symbol.trim().slice(0,4):'',color:col}; });
   const seen={}; const dd=ok.filter(c=>{ if(seen[c.code]) return false; seen[c.code]=1; return true; });
   return dd.length?dd:null;
 }
@@ -646,9 +650,20 @@ function donutHTML(entries, centerLabel){
     const pct=Math.round(e[1]/total*100);
     return '<div class="bar-row"><span><i style="display:inline-block;width:12px;height:12px;border-radius:50%;background:'+DONUT_COLORS[i%DONUT_COLORS.length]+';margin-inline-end:6px"></i>'+e[0]+'</span><b>'+fmt(e[1])+' ('+pct+'%)</b></div>';
   }).join('');
-  return '<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><svg width="140" height="140" viewBox="0 0 140 140">'+segs+'<text x="70" y="66" text-anchor="middle" font-size="16" font-weight="800" fill="#1a2530">'+fmt(total)+'</text><text x="70" y="84" text-anchor="middle" font-size="11" fill="#64748b">'+centerLabel+'</text></svg><div style="flex:1;min-width:160px">'+legend+'</div></div>';
+  return '<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><svg width="140" height="140" viewBox="0 0 140 140">'+segs+'<text x="70" y="66" text-anchor="middle" font-size="16" font-weight="800" style="fill:var(--text)">'+fmt(total)+'</text><text x="70" y="84" text-anchor="middle" font-size="11" style="fill:var(--muted)">'+centerLabel+'</text></svg><div style="flex:1;min-width:160px">'+legend+'</div></div>';
 }
 
+function renderHomeDebts(){
+  const el=document.getElementById('homeDebtsBody'); if(!el) return;
+  const rows=Object.keys(CUR).map(function(c){
+    const owed=debts.filter(function(d){ return d.type==='owed'&&d.currency===c; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
+    const owe=debts.filter(function(d){ return d.type==='owe'&&d.currency===c; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
+    if(!owed&&!owe) return '';
+    const net=owed-owe;
+    return '<div class="bar-row" style="align-items:center"><span><span class="tag-pill" style="background:'+curColor(c)+'">'+c+'</span>'+CUR[c]+'</span><span><span style="color:var(--green);font-weight:800">⬇ لي: '+fmt(owed)+'</span> • <span style="color:var(--red);font-weight:800">⬆ عليّ: '+fmt(owe)+'</span></span></div><div style="font-size:12px;color:'+(net>=0?'var(--green)':'var(--red)')+';font-weight:700;text-align:end;margin:2px 0 6px">الصافي '+(net>=0?'لي':'عليّ')+': '+fmt(Math.abs(net))+'</div>';
+  }).join('');
+  el.innerHTML=rows||'<p class="empty">لا توجد ديون — كل شيء مسدد ✅</p>';
+}
 function render(){
   // Hero balance (Sham Cash style): ONE big main balance with currency tabs,
   // breakdown for the selected currency, compact totals for the other currencies.
@@ -663,7 +678,7 @@ function render(){
   if(tabsEl) tabsEl.innerHTML=Object.keys(CUR).map(function(c){
     const col=curColor(c);
     if(c===heroCur) return '<button type="button" class="hero-tab active" style="background:'+col+';border-color:'+col+';color:#fff" onclick="setHeroCur(\''+c+'\')">'+CUR[c]+'</button>';
-    return '<button type="button" class="hero-tab" onclick="setHeroCur(\''+c+'\')"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+col+';margin-inline-end:4px"></span>'+CUR[c]+'</button>';
+    return '<button type="button" class="hero-tab" onclick="setHeroCur(\''+c+'\')"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+col+';margin-inline-end:5px;box-shadow:0 0 0 2px rgba(255,255,255,.65)"></span>'+CUR[c]+'</button>';
   }).join('');
   if(mainEl){
     const total=bal(heroCur), cash=bal(heroCur,'cash'), sham=bal(heroCur,'sham');
@@ -672,7 +687,7 @@ function render(){
   if(heroEl){
     heroEl.innerHTML=Object.keys(CUR).filter(c=>c!==heroCur).map(c=>{
       const total=bal(c), cash=bal(c,'cash'), sham=bal(c,'sham');
-      return '<div class="hero-cur" style="border-inline-start:4px solid '+curColor(c)+'"><div><div class="hero-cur-name"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+curColor(c)+';margin-inline-end:5px"></span>'+CUR[c]+'</div><div class="hero-cur-sub">💵 كاش: '+show(cash)+' • 📱 شام كاش: '+show(sham)+'</div></div><div class="hero-cur-amt'+(total<0?' neg':'')+'">'+show(total)+' '+c+'</div></div>';
+      return '<div class="hero-cur"><div><div class="hero-cur-name"><span class="tag-pill" style="background:'+curColor(c)+'">'+c+'</span>'+CUR[c]+'</div><div class="hero-cur-sub">💵 كاش: '+show(cash)+' • 📱 شام كاش: '+show(sham)+'</div></div><div class="hero-cur-amt'+(total<0?' neg':'')+'">'+show(total)+' '+c+'</div></div>';
     }).join('');
   }
   if(lockRow){
@@ -699,7 +714,7 @@ function render(){
     const exp=txs.filter(t=>t.type==='expense'&&t.currency===c).reduce((s,t)=>s+ +t.amount,0);
     const cashRem=txs.filter(t=>t.currency===c&&t.wallet==='cash').reduce((s,t)=>s+(t.type==='income'?+t.amount:-+t.amount),0);
     const shamRem=txs.filter(t=>t.currency===c&&t.wallet==='sham').reduce((s,t)=>s+(t.type==='income'?+t.amount:-+t.amount),0);
-    html+='<div class="sum"><h3 style="color:'+curColor(c)+'">'+CUR[c]+'</h3><div class="big rem">المتبقي: '+fmt(inc-exp)+'</div><small class="inc">⬇ قبض: '+fmt(inc)+'</small><small class="exp">⬆ أنفقت: '+fmt(exp)+'</small><small>💵 كاش: '+fmt(cashRem)+'</small><small>📱 شام كاش: '+fmt(shamRem)+'</small></div>';
+    html+='<div class="sum"><h3><span class="tag-pill" style="background:'+curColor(c)+'">'+c+'</span>'+CUR[c]+'</h3><div class="big rem">المتبقي: '+fmt(inc-exp)+'</div><small class="inc">⬇ قبض: '+fmt(inc)+'</small><small class="exp">⬆ أنفقت: '+fmt(exp)+'</small><small>💵 كاش: '+fmt(cashRem)+'</small><small>📱 شام كاش: '+fmt(shamRem)+'</small></div>';
   });
   el.innerHTML=html;
   let wh='';
@@ -739,12 +754,7 @@ function render(){
     const cashRem=bal(heroCur,'cash'), shamRem=bal(heroCur,'sham');
     wd.innerHTML=donutHTML([['💵 كاش',Math.max(0,cashRem)],['📱 شام كاش',Math.max(0,shamRem)]], CUR[heroCur]);
   }
-  const heroDebt=document.getElementById('heroDebts');
-  if(heroDebt){
-    const owedD=debts.filter(function(d){ return d.type==='owed'&&d.currency===heroCur; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
-    const oweD=debts.filter(function(d){ return d.type==='owe'&&d.currency===heroCur; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
-    heroDebt.innerHTML=(owedD||oweD)?'<div class="hero-cur"><div class="hero-cur-name"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+curColor(heroCur)+';margin-inline-end:5px"></span>💳 الديون — '+CUR[heroCur]+'</div><div class="hero-cur-sub"><span style="color:var(--green);font-weight:700">⬇ لي: '+show(owedD)+'</span> • <span style="color:var(--red);font-weight:700">⬆ عليّ: '+show(oweD)+'</span></div></div>':'';
-  }
+  renderHomeDebts();
   // List (search + filters)
   const q=(document.getElementById('search').value||'').trim();
   const ft=document.getElementById('filterType').value, fc=document.getElementById('filterCur').value, fw=document.getElementById('filterWallet').value;
@@ -761,7 +771,7 @@ function render(){
     const sign=t.type==='income'?'+':'−';
     const head=(t.date!==prevDate)?'<div class="date-head">📅 '+weekdayName(t.date)+' '+t.date+'</div>':'';
     prevDate=t.date;
-    const cardStyle=t.type==='income'?' style="background:#e8f8f1;border-color:#34a97b"':' style="background:#fdf0ef;border-color:#e8a49e"';
+    const cardStyle=t.type==='income'?' style="border-inline-start:4px solid var(--green)"':' style="border-inline-start:4px solid var(--red)"';
     return head+'<div class="tx"'+cardStyle+' onclick="showTx(\''+t.id+'\')"><div class="top"><div><b>'+(t.type==='income'?'⬇ قبض':'⬆ دفع')+' — '+t.category+'</b><span class="date-badge">📅 '+weekdayName(t.date)+' '+t.date+'</span><div class="meta">'+t.desc+' • '+curName(t.currency)+' • '+WALLET[t.wallet]+'</div>'+(t.note?'<div class="meta">📝 ملاحظات: '+t.note+'</div>':'')+'</div><div class="amt '+(t.type==='income'?'in':'out')+'">'+sign+' '+fmt(t.amount)+' '+t.currency+'</div></div></div>';
   }).join('');
 }
@@ -838,7 +848,7 @@ function renderDebts(){
   Object.keys(CUR).forEach(function(c){
     const owed=debts.filter(function(d){ return d.type==='owed'&&d.currency===c; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
     const owe=debts.filter(function(d){ return d.type==='owe'&&d.currency===c; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
-    if(owed||owe){ const net=owed-owe; h+='<div class="sum"><h3 style="color:'+curColor(c)+'">'+CUR[c]+'</h3><div class="big" style="color:var(--green)">⬇ لي: '+fmt(owed)+'</div><div class="big" style="color:var(--red)">⬆ عليّ: '+fmt(owe)+'</div><small style="color:'+(net>=0?'var(--green)':'var(--red)')+'">الصافي '+(net>=0?'لي':'عليّ')+': '+fmt(Math.abs(net))+'</small></div>'; }
+    if(owed||owe){ const net=owed-owe; h+='<div class="sum"><h3><span class="tag-pill" style="background:'+curColor(c)+'">'+c+'</span>'+CUR[c]+'</h3><div class="big" style="color:var(--green)">⬇ لي: '+fmt(owed)+'</div><div class="big" style="color:var(--red)">⬆ عليّ: '+fmt(owe)+'</div><small style="color:'+(net>=0?'var(--green)':'var(--red)')+'">الصافي '+(net>=0?'لي':'عليّ')+': '+fmt(Math.abs(net))+'</small></div>'; }
   });
   sumEl.innerHTML=h||'<p class="empty">لا ديون مسجلة بعد.</p>';
   const q=(document.getElementById('debtSearch').value||'').trim();
@@ -860,16 +870,16 @@ function renderDebts(){
   if(!shown.length){ list.innerHTML='<p class="empty">لا توجد ديون مطابقة.</p>'; return; }
   list.innerHTML=shown.map(function(d){
     const st=debtStatus(d), rem=debtRemaining(d);
-    const label=d.type==='owed'?'⬇ دين لي':'⬆ دين عليّ';
+    const label=d.type==='owed'?'<span class="tag-pill" style="background:#047857">⬇ دين لي</span>':'<span class="tag-pill" style="background:#b91c1c">⬆ دين عليّ</span>';
     const cls=d.type==='owed'?'in':'out';
     const badge=st==='paid'?'✅ مسدد بالكامل':(st==='partial'?'🟡 مسدد جزئياً':'🔴 قائم');
     const overdue=(d.due && st!=='paid' && d.due<todayISO());
     let style='';
-    if(st==='paid') style=' style="background:#f1f5f9;border-color:#cbd5e1"';
-    else if(d.type==='owed') style=' style="background:#e8f8f1;border-color:#34a97b"';
-    else style=' style="background:#fdf0ef;border-color:#e8a49e"';
-    if(overdue) style=' style="background:#fdecea;border-color:#b42318"';
-    return '<div class="tx"'+style+'><div class="top"><div><b>'+label+' — '+escAttr(d.person)+'</b><span class="date-badge">📅 '+d.date+'</span><div class="meta">'+badge+' • '+curName(d.currency)+debtDueInfo(d)+'</div><div class="meta">المبلغ: '+fmt(d.amount)+' '+d.currency+' • المسدد: '+fmt(d.paid||0)+' • المتبقي: '+fmt(rem)+'</div>'+(d.note?'<div class="meta">📝 '+escAttr(d.note)+'</div>':'')+'</div><div class="amt '+cls+'">'+fmt(rem)+' '+d.currency+'</div></div><div class="actions">'+(st!=='paid'?'<button onclick="debtPay(\''+d.id+'\')">💰 تسجيل دفعة</button><button onclick="debtSettle(\''+d.id+'\')">✅ تسديد كامل</button>':'')+((+d.paid||0)>0?'<button onclick="debtEditPaid(\''+d.id+'\')">✏️ تعديل المسدد</button>':'')+'<button onclick="editDebt(\''+d.id+'\')">✏️ تعديل</button><button onclick="delDebt(\''+d.id+'\')">🗑️ حذف</button></div></div>';
+    if(st==='paid') style=' style="border-inline-start:4px solid #64748b"';
+    else if(d.type==='owed') style=' style="border-inline-start:4px solid var(--green)"';
+    else style=' style="border-inline-start:4px solid var(--red)"';
+    if(overdue) style=' style="border-inline-start:4px solid var(--red);border-color:var(--red)"';
+    return '<div class="tx"'+style+'><div class="top"><div>'+label+' <b>'+escAttr(d.person)+'</b><span class="date-badge">📅 '+d.date+'</span><div class="meta">'+badge+' • '+curName(d.currency)+debtDueInfo(d)+'</div><div class="meta">المبلغ: '+fmt(d.amount)+' '+d.currency+' • المسدد: '+fmt(d.paid||0)+' • المتبقي: '+fmt(rem)+'</div>'+(d.note?'<div class="meta">📝 '+escAttr(d.note)+'</div>':'')+'</div><div class="amt '+cls+'">'+fmt(rem)+' '+d.currency+'</div></div><div class="actions">'+(st!=='paid'?'<button onclick="debtPay(\''+d.id+'\')">💰 تسجيل دفعة</button><button onclick="debtSettle(\''+d.id+'\')">✅ تسديد كامل</button>':'')+((+d.paid||0)>0?'<button onclick="debtEditPaid(\''+d.id+'\')">✏️ تعديل المسدد</button>':'')+'<button onclick="editDebt(\''+d.id+'\')">✏️ تعديل</button><button onclick="delDebt(\''+d.id+'\')">🗑️ حذف</button></div></div>';
   }).join('');
 }
 function setDebtType(t){
@@ -1047,7 +1057,7 @@ function renderCatLists(){
     if(!arr.length) return '<span class="empty" style="padding:4px 0">لا فئات.</span>';
     return arr.map(function(c){
       const n=txs.filter(t=>t.category===c).length;
-      return '<span class="chip">'+c+(n?' <small style="color:#64748b">('+n+')</small>':'')+' <button type="button" data-cat-kind="'+kind+'" data-cat-name="'+escAttr(c)+'" title="حذف الفئة">✕</button></span>';
+      return '<span class="chip">'+c+(n?' <small style="color:var(--muted)">('+n+')</small>':'')+' <button type="button" data-cat-kind="'+kind+'" data-cat-name="'+escAttr(c)+'" title="حذف الفئة">✕</button></span>';
     }).join('');
   }
   const e=document.getElementById('expCatList'); if(e) e.innerHTML=html('expense', expCats);
@@ -1057,7 +1067,7 @@ function renderCurList(){
   const el=document.getElementById('curList'); if(!el) return;
   el.innerHTML=curs.map(function(c){
     const n=txs.filter(t=>t.currency===c.code).length;
-    return '<span class="chip"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:'+curColor(c.code)+'"></span>'+c.name+' • '+c.code+(c.symbol?' '+c.symbol:'')+(n?' <small style="color:#64748b">('+n+')</small>':'')+' <input type="color" value="'+curColor(c.code)+'" data-cur-color="'+c.code+'" title="تغيير لون العملة" style="width:26px;height:22px;padding:0;border:none;background:none;vertical-align:middle"> <button type="button" data-cur-code="'+c.code+'" title="حذف العملة">✕</button></span>';
+    return '<span class="chip"><span class="tag-pill" style="background:'+curColor(c.code)+'">'+c.code+'</span>'+c.name+(c.symbol?' '+c.symbol:'')+(n?' <small style="color:var(--muted)">('+n+')</small>':'')+' <input type="color" value="'+curColor(c.code)+'" data-cur-color="'+c.code+'" title="تغيير لون العملة" style="width:26px;height:22px;padding:0;border:none;background:none;vertical-align:middle"> <button type="button" data-cur-code="'+c.code+'" title="حذف العملة">✕</button></span>';
   }).join('');
 }
 function addCat(kind){
@@ -1251,7 +1261,7 @@ function applyVoiceDraft(text, srcLabel){
   var box=document.getElementById('voiceBox'); box.style.display='block';
   var r=parseVoice(text);
   var html='<b>'+(srcLabel||'🎙️ النص المعترف به:')+'</b> '+text+'<br>';
-  if(r.issues.length){ html+='<span style="color:#b42318"><b>⚠️ '+r.issues.join('<br>⚠️ ')+'</b></span><br>'; }
+  if(r.issues.length){ html+='<span style="color:var(--red)"><b>⚠️ '+r.issues.join('<br>⚠️ ')+'</b></span><br>'; }
   if(r.type){ setType(r.type); }
   if(r.amount!==null){ document.getElementById('amount').value=r.amount; }
   if(r.currency){ document.getElementById('currency').value=r.currency; }
@@ -1262,7 +1272,7 @@ function applyVoiceDraft(text, srcLabel){
   // Notes: keep the FULL original recognised text here, so nothing from what the user said is lost.
   // Any extra words after the amount/description stay in the notes for the user to review/edit.
   document.getElementById('note').value=text;
-  html+='<span style="color:#0b6e4f"><b>✅ مسودة جاهزة للمراجعة:</b> '+(r.type==='income'?'قبض':r.type==='expense'?'دفع':'نوع غير معروف')+' • '+(r.amount!==null?r.amount+' '+(r.currency||''): 'مبلغ غير معروف')+' • تاريخ '+r.date+' — صحّح الحقول أعلاه ثم اضغط حفظ.</span>';
+  html+='<span style="color:var(--green)"><b>✅ مسودة جاهزة للمراجعة:</b> '+(r.type==='income'?'قبض':r.type==='expense'?'دفع':'نوع غير معروف')+' • '+(r.amount!==null?r.amount+' '+(r.currency||''): 'مبلغ غير معروف')+' • تاريخ '+r.date+' — صحّح الحقول أعلاه ثم اضغط حفظ.</span>';
   box.innerHTML=html;
 }
 // ---- Shared receipt (Android ACTION_SEND, e.g. from Sham Cash) ----
