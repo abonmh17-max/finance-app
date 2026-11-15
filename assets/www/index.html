@@ -727,7 +727,6 @@ function render(){
   }
   if(lockRow){
     if(heroLocked) lockRow.innerHTML='<button type="button" onclick="heroUnlock()">🔓 إدخال الرقم لعرض الرصيد</button><button type="button" class="linklike" onclick="heroForgotPin()">نسيت الرقم؟</button>';
-    else if(heroPin) lockRow.innerHTML='<button type="button" onclick="heroLockNow()">🔒 قفل الرصيد</button>';
     else lockRow.innerHTML='';
   }
   // Settings tab: PIN lock controls (rendered here so they always show current state)
