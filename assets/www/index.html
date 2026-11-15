@@ -38,6 +38,7 @@ main{padding:12px;max-width:900px;margin:0 auto;padding-bottom:110px}
 .hero-main-label{font-size:14px;opacity:.9}
 .hero-main-amt{font-size:38px;font-weight:800;direction:ltr;line-height:1.2}
 .hero-main-amt.neg{color:#ffd166}
+.hero-main-amt.gold,.hero-cur-amt.gold,.gold-num{color:#ffd166}
 .hero-main-sub{font-size:14px;opacity:.95;margin-top:4px}
 .hero-mini{margin-top:8px}
 .hero-mini .hero-cur{padding:9px 2px}
@@ -56,6 +57,7 @@ main{padding:12px;max-width:900px;margin:0 auto;padding-bottom:110px}
 .pin-actions{display:flex;gap:10px;margin-top:10px}
 .pin-actions .btn{flex:1;margin-top:0}
 .card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+#homeDebtsCard{background:var(--tint)}
 .card h2{margin:0 0 10px;font-size:17px}
 .tabs{display:flex;gap:8px;margin:6px 0 10px}
 .voice-row{display:flex;gap:8px;align-items:center;margin:0 0 18px}
@@ -619,6 +621,7 @@ window.switchTab=function(t){
   });
 })();
 function heroMasked(){ return heroHidden || heroLocked; }
+function maskNum(n){ return heroMasked() ? '••••••' : fmt(n); }
 let txs=[];
 try{ txs=JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch(e){ txs=[]; }
 if(!Array.isArray(txs)) txs=[];
@@ -690,7 +693,7 @@ function renderHomeDebts(){
     const owe=debts.filter(function(d){ return d.type==='owe'&&d.currency===c; }).reduce(function(s,d){ return s+debtRemaining(d); },0);
     if(!owed&&!owe) return '';
     const net=owed-owe;
-    return '<div class="bar-row" style="align-items:center"><span><span class="tag-pill" style="background:'+curColor(c)+'">'+c+'</span>'+CUR[c]+'</span><span><span style="color:var(--green);font-weight:800">⬇ لي: '+fmt(owed)+'</span> • <span style="color:var(--red);font-weight:800">⬆ عليّ: '+fmt(owe)+'</span></span></div><div style="font-size:12px;color:'+(net>=0?'var(--green)':'var(--red)')+';font-weight:700;text-align:end;margin:2px 0 6px">الصافي '+(net>=0?'لي':'عليّ')+': '+fmt(Math.abs(net))+'</div>';
+    return '<div class="bar-row" style="align-items:center"><span><span class="tag-pill" style="background:'+curColor(c)+'">'+c+'</span>'+CUR[c]+'</span><span><span style="color:var(--green);font-weight:800">⬇ لي: '+maskNum(owed)+'</span> • <span style="color:var(--red);font-weight:800">⬆ عليّ: '+maskNum(owe)+'</span></span></div><div style="font-size:12px;color:'+(net>=0?'var(--green)':'var(--red)')+';font-weight:700;text-align:end;margin:2px 0 6px">الصافي '+(net>=0?'لي':'عليّ')+': '+maskNum(Math.abs(net))+'</div>';
   }).join('');
   el.innerHTML=rows||'<p class="empty">لا توجد ديون — كل شيء مسدد ✅</p>';
 }
@@ -704,6 +707,8 @@ function render(){
     return inc-exp;
   };
   const show=n=> heroMasked() ? '••••••' : fmt(n);
+  const goldCls=c=> c==='SYP'?' gold':'';
+  const goldNum=(c,txt)=> c==='SYP'?'<span class="gold-num">'+txt+'</span>':txt;
   const tabsEl=document.getElementById('heroTabs'), mainEl=document.getElementById('heroMain'), heroEl=document.getElementById('heroBalances'), lockRow=document.getElementById('heroLockRow');
   if(tabsEl) tabsEl.innerHTML=Object.keys(CUR).map(function(c){
     const col=curColor(c);
@@ -712,12 +717,12 @@ function render(){
   }).join('');
   if(mainEl){
     const total=bal(heroCur), cash=bal(heroCur,'cash'), sham=bal(heroCur,'sham');
-    mainEl.innerHTML='<div class="hero-main-label">رصيدك — '+CUR[heroCur]+'</div><div class="hero-main-amt'+(total<0?' neg':'')+'">'+show(total)+' '+heroCur+'</div>'+(heroLocked?'<div class="hero-main-sub">🔒 الرصيد مقفل — أدخل الرقم لعرض التفاصيل</div>':'<div class="hero-main-sub">💵 كاش: '+show(cash)+' • 📱 شام كاش: '+show(sham)+'</div>');
+    mainEl.innerHTML='<div class="hero-main-label">رصيدك — '+CUR[heroCur]+'</div><div class="hero-main-amt'+(total<0?' neg':'')+goldCls(heroCur)+'">'+show(total)+' '+heroCur+'</div>'+(heroLocked?'<div class="hero-main-sub">🔒 الرصيد مقفل — أدخل الرقم لعرض التفاصيل</div>':'<div class="hero-main-sub">💵 كاش: '+goldNum(heroCur,show(cash))+' • 📱 شام كاش: '+goldNum(heroCur,show(sham))+'</div>');
   }
   if(heroEl){
     heroEl.innerHTML=Object.keys(CUR).filter(c=>c!==heroCur).map(c=>{
       const total=bal(c), cash=bal(c,'cash'), sham=bal(c,'sham');
-      return '<div class="hero-cur"><div><div class="hero-cur-name"><span class="tag-pill" style="background:'+curColor(c)+'">'+c+'</span>'+CUR[c]+'</div><div class="hero-cur-sub">💵 كاش: '+show(cash)+' • 📱 شام كاش: '+show(sham)+'</div></div><div class="hero-cur-amt'+(total<0?' neg':'')+'">'+show(total)+' '+c+'</div></div>';
+      return '<div class="hero-cur"><div><div class="hero-cur-name"><span class="tag-pill" style="background:'+curColor(c)+'">'+c+'</span>'+CUR[c]+'</div><div class="hero-cur-sub">💵 كاش: '+goldNum(c,show(cash))+' • 📱 شام كاش: '+goldNum(c,show(sham))+'</div></div><div class="hero-cur-amt'+(total<0?' neg':'')+goldCls(c)+'">'+show(total)+' '+c+'</div></div>';
     }).join('');
   }
   if(lockRow){
