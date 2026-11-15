@@ -197,11 +197,18 @@ input[type=date]{direction:ltr;text-align:right}
 <div class="card">
 <h2>التقرير التفاعلي</h2>
 <div class="filters" id="periodFilters">
-<button data-p="today" class="active">اليوم</button>
+<button data-p="today">اليوم</button>
 <button data-p="week">هذا الأسبوع (آخر 7 أيام)</button>
 <button data-p="month">هذا الشهر</button>
 <button data-p="lastmonth">الشهر الماضي</button>
-<button data-p="all">الكل</button>
+<button data-p="all" class="active">الكل</button>
+</div>
+<div class="search-row" style="margin-top:8px">
+<label style="margin:0;align-self:center">📅 من</label>
+<input id="reportFrom" type="date">
+<label style="margin:0;align-self:center">إلى</label>
+<input id="reportTo" type="date">
+<button class="btn secondary" id="clearReportDates" type="button" style="margin-top:0;padding:9px 12px">✖ مسح</button>
 </div>
 <p class="hint" id="periodLabel"></p>
 <div id="report"></div>
@@ -544,7 +551,7 @@ function loadCats(kind){
 let incCats=loadCats('income'), expCats=loadCats('expense');
 function saveCats(kind){ localStorage.setItem('finance_cats_'+kind, JSON.stringify(kind==='income'?incCats:expCats)); }
 function validCats(v){ if(!Array.isArray(v)) return null; const ok=v.map(x=>typeof x==='string'?x.trim():'').filter(x=>x); return ok.length?Array.from(new Set(ok)):null; }
-let type='income', period='today';
+let type='income', period='all';
 // Hero balance state (device only, localStorage): selected currency, eye hide, PIN lock.
 // The PIN is a privacy screen on this phone, NOT bank-grade security.
 let heroHidden=localStorage.getItem('finance_hero_hidden')==='1';
@@ -618,7 +625,13 @@ function setType(t){ type=t; document.getElementById('tabInc').className= t==='i
 document.getElementById('tabInc').onclick=()=>setType('income');
 document.getElementById('tabExp').onclick=()=>setType('expense');
 document.getElementById('txDate').value=todayISO();
+function reportCustomRange(){
+  const rf=document.getElementById('reportFrom'), rt=document.getElementById('reportTo');
+  return {f:rf?rf.value:'', t:rt?rt.value:''};
+}
 function inPeriod(dStr){
+  const rg=reportCustomRange();
+  if(rg.f||rg.t){ if(rg.f&&dStr<rg.f) return false; if(rg.t&&dStr>rg.t) return false; return true; }
   if(period==='all') return true;
   const d=new Date(dStr+'T00:00:00'); if(isNaN(d)) return false;
   const now=new Date(); const t0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
@@ -628,7 +641,11 @@ function inPeriod(dStr){
   if(period==='lastmonth'){ const lm=new Date(now.getFullYear(),now.getMonth()-1,1); return d.getFullYear()===lm.getFullYear() && d.getMonth()===lm.getMonth(); }
   return true;
 }
-function periodName(){ return {today:'اليوم',week:'هذا الأسبوع (آخر 7 أيام)',month:'هذا الشهر',lastmonth:'الشهر الماضي',all:'كل الفترات'}[period]; }
+function periodName(){
+  const rg=reportCustomRange();
+  if(rg.f||rg.t) return 'مخصص: '+(rg.f?'من '+rg.f:'')+(rg.f&&rg.t?' ':'')+(rg.t?'إلى '+rg.t:'');
+  return {today:'اليوم',week:'هذا الأسبوع (آخر 7 أيام)',month:'هذا الشهر',lastmonth:'الشهر الماضي',all:'كل الفترات'}[period];
+}
 
 // ---- Donut charts (pure SVG, offline, no libraries) ----
 const DONUT_COLORS=['#0b6e4f','#0369a1','#7c3aed','#b45309','#b42318','#0e7490','#65a30d','#db2777'];
@@ -728,6 +745,8 @@ function render(){
   document.getElementById('walletSummary').innerHTML= wh? '<div style="margin-top:10px"><b>حسب المحفظة:</b>'+wh+'</div>' : '<p class="hint">لا حركات بعد — أضف أول قبض أو دفع أعلاه.</p>';
   // Report for selected period (based on tx.date, NOT entry time)
   const ptx=txs.filter(t=>inPeriod(t.date));
+  const rg0=reportCustomRange();
+  document.querySelectorAll('#periodFilters button').forEach(function(b){ b.classList.toggle('active', !(rg0.f||rg0.t) && b.dataset.p===period); });
   document.getElementById('periodLabel').textContent='الفترة: '+periodName()+' — عدد الحركات في هذه الفترة: '+ptx.length+' — تُحسب كل عملية حسب تاريخها الخاص.';
   let rh='';
   Object.keys(CUR).forEach(c=>{
@@ -1004,7 +1023,9 @@ document.getElementById('form').addEventListener('submit',e=>{
   else txs.push({id:'tx'+Date.now()+Math.floor(Math.random()*1000),createdAt:Date.now(),...data});
   save(); e.target.reset(); document.getElementById('txDate').value=todayISO(); setCats(); render();
 });
-document.getElementById('periodFilters').addEventListener('click',e=>{ if(e.target.dataset.p){ period=e.target.dataset.p; document.querySelectorAll('#periodFilters button').forEach(b=>b.classList.toggle('active',b===e.target)); render(); } });
+document.getElementById('periodFilters').addEventListener('click',e=>{ if(e.target.dataset.p){ period=e.target.dataset.p; document.getElementById('reportFrom').value=''; document.getElementById('reportTo').value=''; document.querySelectorAll('#periodFilters button').forEach(b=>b.classList.toggle('active',b===e.target)); render(); } });
+['reportFrom','reportTo'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+document.getElementById('clearReportDates').onclick=function(){ document.getElementById('reportFrom').value=''; document.getElementById('reportTo').value=''; period='all'; render(); };
 ['search','filterType','filterCur','filterWallet','filterFrom','filterTo'].forEach(id=>document.getElementById(id).addEventListener('input',render));
 document.getElementById('clearDateFilter').onclick=function(){ document.getElementById('filterFrom').value=''; document.getElementById('filterTo').value=''; render(); };
 function summaryRows(list){
