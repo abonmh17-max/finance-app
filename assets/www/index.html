@@ -655,8 +655,28 @@ function validCats(v, kind){ return normalizeCats(v, kind); }
 // Never deletes user-added categories or subs.
 const CAT_REMAP_EXP={'أكل جاهز ومطاعم':'طعام','سيارة ومواصلات':'مواصلات','خدمات ومرافق':'فواتير','طبابة وصحة':'صحة'};
 const CAT_REMAP_INC_MAIN={'راتب شهري':'راتب','أرباح استثمار':'عمل حر','دخل إضافي':'عمل حر','تحصيل دين':'تحويل وارد','هدية / إكرامية':'أخرى','مصادر أخرى':'أخرى'};
+// ---- البيان → الملاحظة (تشرين الثاني 2026): حقل البيان حُذف من النموذج،
+// والملاحظة تحلّ محلّه حاملةً البيانات القديمة حتى لا تضيع. عند أول تحميل
+// بعد التحديث يُنقَل كل بيان قديم إلى الملاحظة (البيان أولاً لأنه كان الوصف
+// الرئيسي)، ثم يُحذف حقل البيان. Idempotent: بعد النقل لا يبقى بيان.
+// الاستثناء: بيان التحويل المُولَّد تلقائياً («تحويل من X إلى Y») يُحذف
+// فقط لأنه مكرر مع عنوان بطاقة التحويل؛ أما بيان تحويل كتبه المستخدم
+// بنفسه فيُنقَل إلى الملاحظة كغيره.
+const TRF_AUTO_DESC=['تحويل من كاش إلى شام كاش','تحويل من شام كاش إلى كاش'];
+function migrateDescToNote(t){
+  if(!t || typeof t!=='object') return false;
+  var d=(typeof t.desc==='string') ? t.desc.trim() : '';
+  if(!d){ if('desc' in t) delete t.desc; return false; }
+  if(t.type==='transfer' && TRF_AUTO_DESC.indexOf(d)>=0){ delete t.desc; return true; }
+  var n=(typeof t.note==='string') ? t.note.trim() : '';
+  t.note = n ? (d + ' — ' + n) : d;
+  delete t.desc;
+  return true;
+}
 function migrateMergedCats(){
   let changed=false;
+  // البيان → الملاحظة: استعادة البيانات القديمة (انظر migrateDescToNote).
+  txs.forEach(function(t){ if(migrateDescToNote(t)) changed=true; });
   // Additive merge of missing default subs into existing mains (once only).
   // Runs FIRST, so the remap below can keep a sub that only exists in the
   // new defaults (e.g. 'شاورما' under 'طعام' from an old string-array backup).
@@ -1620,6 +1640,7 @@ document.getElementById('restoreFile').addEventListener('change',function(){
           createdAt: Number(t.createdAt)||Date.now(),
           type:'transfer', amount:amount, currency:t.currency, fromWallet:t.fromWallet, toWallet:t.toWallet, date:t.date,
           category: '', subCat: 'عام',
+          desc: typeof t.desc==='string' ? t.desc : '',
           note: typeof t.note==='string' ? t.note : ''
         });
         return;
@@ -1631,6 +1652,7 @@ document.getElementById('restoreFile').addEventListener('change',function(){
         type:t.type, amount:amount, currency:t.currency, wallet:t.wallet, date:t.date,
         category: typeof t.category==='string' ? t.category : 'أخرى',
         subCat: t.type==='income' ? '' : (typeof t.subCat==='string' && t.subCat ? t.subCat : 'عام'),
+        desc: typeof t.desc==='string' ? t.desc : '',
         note: typeof t.note==='string' ? t.note : ''
       });
     });
