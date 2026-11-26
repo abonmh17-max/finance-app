@@ -82,16 +82,23 @@ input,select,textarea{width:100%;padding:11px;border:1px solid var(--border2);bo
    الوحيد، وكل الكود القديم يقرأ منه ويكتب فيه كالمعتاد. */
 select.native-hidden{display:none}
 .cs{position:relative}
-.cs-btn{width:100%;padding:11px;border:1px solid var(--border2);border-radius:10px;font-size:16px;font-family:inherit;background:var(--card);color:var(--text);display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;text-align:right}
+.cs-btn{width:100%;padding:13px;border:1px solid var(--border2);border-radius:10px;font-size:17px;font-family:inherit;background:var(--card);color:var(--text);display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;text-align:right}
 .cs-btn .cs-val{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cs-btn .cs-arrow{color:var(--muted);flex:none}
-.cs-panel{display:none;position:absolute;top:calc(100% + 4px);inset-inline:0;z-index:50;background:var(--card);border:1px solid var(--border2);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);overflow:hidden}
-.cs.open .cs-panel{display:block}
-.cs-search{width:100%;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:10px 12px;font-size:15px}
-.cs-list{max-height:calc(100vh - 140px);overflow-y:auto;-webkit-overflow-scrolling:touch} /* بلا حد عددي: تتمدد بطول الشاشة، والتمرير الداخلي فقط إذا تجاوزت القائمة طول الشاشة نفسها */
-.cs-item{display:block;width:100%;text-align:right;padding:11px 12px;border:none;background:none;font-size:16px;font-family:inherit;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border)}
+/* نافذة منبثقة بأسلوب قائمة أندرويد الأصلية (مريحة: صفوف كبيرة، نافذة وسط
+   الشاشة مع تعتيم خلفها) لكن بلا حد عددي — تعرض كل العناصر مع تمرير
+   داخلي وبحث. */
+#csBackdrop{display:none;position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.45)}
+.cs-panel{display:none;position:fixed;left:12px;right:12px;top:50%;transform:translateY(-50%);z-index:70;background:var(--card);border:1px solid var(--border2);border-radius:16px;box-shadow:0 16px 40px rgba(0,0,0,.35);overflow:hidden;max-height:86vh}
+.cs.open .cs-panel{display:flex;flex-direction:column}
+.cs-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border);font-weight:800;font-size:17px;flex:none}
+.cs-close{border:none;background:none;font-size:20px;cursor:pointer;color:var(--muted);padding:4px 8px;font-family:inherit}
+.cs-search{width:100%;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:12px 16px;font-size:16px;flex:none}
+.cs-list{max-height:calc(86vh - 130px);overflow-y:auto;-webkit-overflow-scrolling:touch} /* بلا حد عددي: كل العناصر موجودة، والتمرير الداخلي فقط إذا تجاوزت القائمة طول الشاشة نفسها */
+.cs-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:right;padding:16px;border:none;background:none;font-size:18px;font-family:inherit;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);min-height:54px}
 .cs-item:last-child{border-bottom:none}
 .cs-item.selected{background:var(--soft);font-weight:800}
+.cs-item.selected::after{content:'✓';color:var(--accent-dark);font-weight:800;flex:none}
 .cs-item:active{background:var(--soft)}
 .cs-empty{padding:12px;color:var(--muted);font-size:14px;text-align:center}
 input[type=date]{direction:ltr;text-align:right}
@@ -249,8 +256,8 @@ input[type=date]{direction:ltr;text-align:right}
 <option value="cash">💵 كاش</option><option value="sham" selected>📱 شام كاش</option>
 </select></div>
 </div>
-<div id="catRow"><label id="catLabel">نوع القبض *</label><select id="category" class="native-hidden"></select><div class="cs" id="cs-category"><button type="button" class="cs-btn" id="csBtn-category"><span class="cs-val"></span><span class="cs-arrow">▾</span></button><div class="cs-panel"><input type="search" class="cs-search" id="csSearch-category" placeholder="ابحث في القائمة..."><div class="cs-list" id="csList-category"></div></div></div></div>
-<div id="subRow"><label id="subCatLabel">التصنيف الفرعي</label><select id="subCategory" class="native-hidden"></select><div class="cs" id="cs-subCategory"><button type="button" class="cs-btn" id="csBtn-subCategory"><span class="cs-val"></span><span class="cs-arrow">▾</span></button><div class="cs-panel"><input type="search" class="cs-search" id="csSearch-subCategory" placeholder="ابحث في القائمة..."><div class="cs-list" id="csList-subCategory"></div></div></div></div>
+<div id="catRow"><label id="catLabel">نوع القبض *</label><select id="category" class="native-hidden"></select><div class="cs" id="cs-category" data-title="اختر الفئة"><button type="button" class="cs-btn" id="csBtn-category"><span class="cs-val"></span><span class="cs-arrow">▾</span></button><div class="cs-panel"><div class="cs-head"><span class="cs-title">اختر الفئة</span><button type="button" class="cs-close" aria-label="إغلاق">✕</button></div><input type="search" class="cs-search" id="csSearch-category" placeholder="ابحث في القائمة..."><div class="cs-list" id="csList-category"></div></div></div></div>
+<div id="subRow"><label id="subCatLabel">التصنيف الفرعي</label><select id="subCategory" class="native-hidden"></select><div class="cs" id="cs-subCategory" data-title="اختر التصنيف الفرعي"><button type="button" class="cs-btn" id="csBtn-subCategory"><span class="cs-val"></span><span class="cs-arrow">▾</span></button><div class="cs-panel"><div class="cs-head"><span class="cs-title">اختر التصنيف الفرعي</span><button type="button" class="cs-close" aria-label="إغلاق">✕</button></div><input type="search" class="cs-search" id="csSearch-subCategory" placeholder="ابحث في القائمة..."><div class="cs-list" id="csList-subCategory"></div></div></div></div>
 <div><label>ملاحظات (اختياري)</label><textarea id="note" rows="3" placeholder="ملاحظات إضافية عن هذه العملية — يمكن كتابة ملاحظات طويلة هنا"></textarea></div>
 <button class="btn" id="saveBtn" type="submit">💾 حفظ القبض</button>
 <button class="btn secondary" id="cancelEdit" type="button" style="display:none">إلغاء التعديل</button>
@@ -383,11 +390,11 @@ input[type=date]{direction:ltr;text-align:right}
 <h2>🏷️ الفئات <button class="info-btn" type="button" title="ما هي الفئات؟" data-info="أضف فئاتك الخاصة للقبض والمصروف، وستظهر فوراً في قائمة الفئات عند إضافة عملية جديدة، وفي تقرير «أين أنفقت؟». كل فئة لها تصنيفات فرعية (✏️ لتعديل الاسم، و＋ فرعي لإضافة فرعي جديد)، وتعديل اسم فئة أو فرعي يحدّث كل الحركات القديمة بنفس الاسم. حذف فئة مستخدمة في حركات سابقة لا يحذف تلك الحركات — حركاتك القديمة تحتفظ باسم الفئة، لكن الفئة لن تظهر بعد الآن عند إضافة حركة جديدة.">ⓘ</button></h2>
 <h3>فئات المصروف</h3>
 <div class="cat-input-row"><input id="newExpCat" type="text" placeholder="فئة مصروف جديدة — مثال: ملابس" maxlength="30"><button class="btn secondary" id="addExpCat" type="button">➕ إضافة</button></div>
-<select id="expCatSelect" class="cat-select native-hidden" aria-label="اختر فئة مصروف"></select><div class="cs" id="cs-expCatSelect" style="margin-top:8px"><button type="button" class="cs-btn" id="csBtn-expCatSelect"><span class="cs-val"></span><span class="cs-arrow">▾</span></button><div class="cs-panel"><input type="search" class="cs-search" id="csSearch-expCatSelect" placeholder="ابحث في القائمة..."><div class="cs-list" id="csList-expCatSelect"></div></div></div>
+<select id="expCatSelect" class="cat-select native-hidden" aria-label="اختر فئة مصروف"></select><div class="cs" id="cs-expCatSelect" data-title="فئات المصروف" style="margin-top:8px"><button type="button" class="cs-btn" id="csBtn-expCatSelect"><span class="cs-val"></span><span class="cs-arrow">▾</span></button><div class="cs-panel"><div class="cs-head"><span class="cs-title">فئات المصروف</span><button type="button" class="cs-close" aria-label="إغلاق">✕</button></div><input type="search" class="cs-search" id="csSearch-expCatSelect" placeholder="ابحث في القائمة..."><div class="cs-list" id="csList-expCatSelect"></div></div></div>
 <div class="chip-list cat-list" id="expCatList"></div>
 <h3 style="margin-top:14px">فئات القبض</h3>
 <div class="cat-input-row"><input id="newIncCat" type="text" placeholder="فئة قبض جديدة — مثال: مساعدات" maxlength="30"><button class="btn secondary" id="addIncCat" type="button">➕ إضافة</button></div>
-<select id="incCatSelect" class="cat-select native-hidden" aria-label="اختر فئة قبض"></select><div class="cs" id="cs-incCatSelect" style="margin-top:8px"><button type="button" class="cs-btn" id="csBtn-incCatSelect"><span class="cs-val"></span><span class="cs-arrow">▾</span></button><div class="cs-panel"><input type="search" class="cs-search" id="csSearch-incCatSelect" placeholder="ابحث في القائمة..."><div class="cs-list" id="csList-incCatSelect"></div></div></div>
+<select id="incCatSelect" class="cat-select native-hidden" aria-label="اختر فئة قبض"></select><div class="cs" id="cs-incCatSelect" data-title="فئات القبض" style="margin-top:8px"><button type="button" class="cs-btn" id="csBtn-incCatSelect"><span class="cs-val"></span><span class="cs-arrow">▾</span></button><div class="cs-panel"><div class="cs-head"><span class="cs-title">فئات القبض</span><button type="button" class="cs-close" aria-label="إغلاق">✕</button></div><input type="search" class="cs-search" id="csSearch-incCatSelect" placeholder="ابحث في القائمة..."><div class="cs-list" id="csList-incCatSelect"></div></div></div>
 <div class="chip-list cat-list" id="incCatList"></div>
 </div>
 <div class="card">
@@ -854,22 +861,31 @@ function csSync(id){
 function csCloseAll(exceptId){
   document.querySelectorAll('.cs.open').forEach(function(el){ if(el.id!=='cs-'+exceptId) el.classList.remove('open'); });
 }
+function csSyncBackdrop(){
+  var bd=document.getElementById('csBackdrop'); if(!bd) return;
+  bd.style.display=document.querySelector('.cs.open')?'block':'none';
+}
 function csInit(id){
   var wrap=document.getElementById('cs-'+id); if(!wrap) return;
   var btn=document.getElementById('csBtn-'+id), sel=document.getElementById(id);
   var search=document.getElementById('csSearch-'+id), list=document.getElementById('csList-'+id);
   if(!btn||!sel||!list) return;
+  var titleEl=wrap.querySelector('.cs-title'); if(titleEl) titleEl.textContent=wrap.getAttribute('data-title')||'اختر';
+  var closeBtn=wrap.querySelector('.cs-close');
+  if(closeBtn) closeBtn.addEventListener('click', function(e){ e.stopPropagation(); wrap.classList.remove('open'); csSyncBackdrop(); });
   btn.addEventListener('click', function(e){
     e.stopPropagation();
     var wasOpen=wrap.classList.contains('open');
     csCloseAll(id);
-    if(!wasOpen){ wrap.classList.add('open'); csSync(id); if(search) search.focus(); }
+    if(wasOpen){ wrap.classList.remove('open'); }
+    else { wrap.classList.add('open'); csSync(id); }
+    csSyncBackdrop();
   });
   list.addEventListener('click', function(e){
     var item=e.target.closest('.cs-item'); if(!item) return;
     sel.value=item.getAttribute('data-v');
     sel.dispatchEvent(new Event('change'));
-    csSync(id); wrap.classList.remove('open');
+    csSync(id); wrap.classList.remove('open'); csSyncBackdrop();
   });
   if(search){
     search.addEventListener('click', function(e){ e.stopPropagation(); });
@@ -885,7 +901,7 @@ function csInit(id){
     });
   }
 }
-document.addEventListener('click', function(e){ if(!e.target.closest('.cs')) csCloseAll(''); });
+document.addEventListener('click', function(e){ if(!e.target.closest('.cs')){ csCloseAll(''); csSyncBackdrop(); } });
 ['category','subCategory','expCatSelect','incCatSelect'].forEach(csInit);
 function setType(t){
   type=t;
@@ -1949,5 +1965,6 @@ window.heroForgotPin=async function(){
 };
 setType('income'); window.switchTab(activeTab); render();
 </script>
+<div id="csBackdrop"></div>
 </body>
 </html>
