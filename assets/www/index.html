@@ -75,6 +75,25 @@ main{padding:12px;max-width:900px;margin:0 auto;padding-bottom:110px}
 .tabs button.active-trf{background:#0369a1;color:#fff;border-color:#0369a1}
 label{display:block;font-size:13px;font-weight:700;margin:10px 0 4px}
 input,select,textarea{width:100%;padding:11px;border:1px solid var(--border2);border-radius:10px;font-size:16px;font-family:inherit;background:var(--card);color:var(--text)}
+/* قوائم منسدلة مخصصة داخل الصفحة (تشرين الثاني 2026): نافذة <select> الأصلية
+   في WebView على أندرويد تعرض نحو 6 عناصر فقط في الشاشة الأولى، فيظن
+   المستخدم أن القائمة فيها 6 عناصر فقط. القائمة المخصصة تعرض كل العناصر
+   مع تمرير داخلي وبحث. الـ <select> الأصلي يبقى مخفياً كمصدر الحقيقة
+   الوحيد، وكل الكود القديم يقرأ منه ويكتب فيه كالمعتاد. */
+select.native-hidden{display:none}
+.cs{position:relative}
+.cs-btn{width:100%;padding:11px;border:1px solid var(--border2);border-radius:10px;font-size:16px;font-family:inherit;background:var(--card);color:var(--text);display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;text-align:right}
+.cs-btn .cs-val{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cs-btn .cs-arrow{color:var(--muted);flex:none}
+.cs-panel{display:none;position:absolute;top:calc(100% + 4px);inset-inline:0;z-index:50;background:var(--card);border:1px solid var(--border2);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);overflow:hidden}
+.cs.open .cs-panel{display:block}
+.cs-search{width:100%;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:10px 12px;font-size:15px}
+.cs-list{max-height:280px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.cs-item{display:block;width:100%;text-align:right;padding:11px 12px;border:none;background:none;font-size:16px;font-family:inherit;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border)}
+.cs-item:last-child{border-bottom:none}
+.cs-item.selected{background:var(--soft);font-weight:800}
+.cs-item:active{background:var(--soft)}
+.cs-empty{padding:12px;color:var(--muted);font-size:14px;text-align:center}
 input[type=date]{direction:ltr;text-align:right}
 .row{display:flex;gap:10px}.row>div{flex:1}
 .btn{width:100%;padding:13px;border:none;border-radius:12px;font-size:17px;font-weight:800;cursor:pointer;background:var(--accent);color:#fff;margin-top:14px}
@@ -230,8 +249,8 @@ input[type=date]{direction:ltr;text-align:right}
 <option value="cash">💵 كاش</option><option value="sham" selected>📱 شام كاش</option>
 </select></div>
 </div>
-<div id="catRow"><label id="catLabel">نوع القبض *</label><select id="category"></select></div>
-<div id="subRow"><label id="subCatLabel">التصنيف الفرعي</label><select id="subCategory"></select></div>
+<div id="catRow"><label id="catLabel">نوع القبض *</label><select id="category" class="native-hidden"></select><div class="cs" id="cs-category"><button type="button" class="cs-btn" id="csBtn-category"><span class="cs-val"></span><span class="cs-arrow">▾</span></button><div class="cs-panel"><input type="search" class="cs-search" id="csSearch-category" placeholder="ابحث في القائمة..."><div class="cs-list" id="csList-category"></div></div></div></div>
+<div id="subRow"><label id="subCatLabel">التصنيف الفرعي</label><select id="subCategory" class="native-hidden"></select><div class="cs" id="cs-subCategory"><button type="button" class="cs-btn" id="csBtn-subCategory"><span class="cs-val"></span><span class="cs-arrow">▾</span></button><div class="cs-panel"><input type="search" class="cs-search" id="csSearch-subCategory" placeholder="ابحث في القائمة..."><div class="cs-list" id="csList-subCategory"></div></div></div></div>
 <div><label>ملاحظات (اختياري)</label><textarea id="note" rows="3" placeholder="ملاحظات إضافية عن هذه العملية — يمكن كتابة ملاحظات طويلة هنا"></textarea></div>
 <button class="btn" id="saveBtn" type="submit">💾 حفظ القبض</button>
 <button class="btn secondary" id="cancelEdit" type="button" style="display:none">إلغاء التعديل</button>
@@ -364,11 +383,11 @@ input[type=date]{direction:ltr;text-align:right}
 <h2>🏷️ الفئات <button class="info-btn" type="button" title="ما هي الفئات؟" data-info="أضف فئاتك الخاصة للقبض والمصروف، وستظهر فوراً في قائمة الفئات عند إضافة عملية جديدة، وفي تقرير «أين أنفقت؟». كل فئة لها تصنيفات فرعية (✏️ لتعديل الاسم، و＋ فرعي لإضافة فرعي جديد)، وتعديل اسم فئة أو فرعي يحدّث كل الحركات القديمة بنفس الاسم. حذف فئة مستخدمة في حركات سابقة لا يحذف تلك الحركات — حركاتك القديمة تحتفظ باسم الفئة، لكن الفئة لن تظهر بعد الآن عند إضافة حركة جديدة.">ⓘ</button></h2>
 <h3>فئات المصروف</h3>
 <div class="cat-input-row"><input id="newExpCat" type="text" placeholder="فئة مصروف جديدة — مثال: ملابس" maxlength="30"><button class="btn secondary" id="addExpCat" type="button">➕ إضافة</button></div>
-<select id="expCatSelect" class="cat-select" aria-label="اختر فئة مصروف"></select>
+<select id="expCatSelect" class="cat-select native-hidden" aria-label="اختر فئة مصروف"></select><div class="cs" id="cs-expCatSelect" style="margin-top:8px"><button type="button" class="cs-btn" id="csBtn-expCatSelect"><span class="cs-val"></span><span class="cs-arrow">▾</span></button><div class="cs-panel"><input type="search" class="cs-search" id="csSearch-expCatSelect" placeholder="ابحث في القائمة..."><div class="cs-list" id="csList-expCatSelect"></div></div></div>
 <div class="chip-list cat-list" id="expCatList"></div>
 <h3 style="margin-top:14px">فئات القبض</h3>
 <div class="cat-input-row"><input id="newIncCat" type="text" placeholder="فئة قبض جديدة — مثال: مساعدات" maxlength="30"><button class="btn secondary" id="addIncCat" type="button">➕ إضافة</button></div>
-<select id="incCatSelect" class="cat-select" aria-label="اختر فئة قبض"></select>
+<select id="incCatSelect" class="cat-select native-hidden" aria-label="اختر فئة قبض"></select><div class="cs" id="cs-incCatSelect" style="margin-top:8px"><button type="button" class="cs-btn" id="csBtn-incCatSelect"><span class="cs-val"></span><span class="cs-arrow">▾</span></button><div class="cs-panel"><input type="search" class="cs-search" id="csSearch-incCatSelect" placeholder="ابحث في القائمة..."><div class="cs-list" id="csList-incCatSelect"></div></div></div>
 <div class="chip-list cat-list" id="incCatList"></div>
 </div>
 <div class="card">
@@ -806,11 +825,68 @@ function todayISO(){ const d=new Date(); const m=String(d.getMonth()+1).padStart
 function fmt(n){ return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2}); }
 function save(){ localStorage.setItem(LS_KEY, JSON.stringify(txs)); }
 function setSubCats(){ if(type==='income') return; // Income has no sub-category.
-  const ss=document.getElementById('subCategory'); if(!ss) return; const main=document.getElementById('category').value; let subs=subList(type, main); const eid=document.getElementById('editId').value; if(eid){ const t=txs.find(x=>x.id===eid); if(t && t.subCat && !subs.includes(t.subCat)) subs=subs.concat([t.subCat]); } ss.innerHTML=subs.map(c=>'<option>'+c+'</option>').join(''); }
+  const ss=document.getElementById('subCategory'); if(!ss) return; const main=document.getElementById('category').value; let subs=subList(type, main); const eid=document.getElementById('editId').value; if(eid){ const t=txs.find(x=>x.id===eid); if(t && t.subCat && !subs.includes(t.subCat)) subs=subs.concat([t.subCat]); } ss.innerHTML=subs.map(c=>'<option>'+c+'</option>').join(''); csSync('subCategory'); }
 function setCats(){
   // Transfer has no category: only set the save button.
   if(type==='transfer'){ document.getElementById('saveBtn').textContent= document.getElementById('editId').value? '💾 حفظ التعديل' : '💾 حفظ التحويل'; document.getElementById('saveBtn').className='btn'; return; }
-  const s=document.getElementById('category'); const obj= type==='income'?incCats:expCats; let list=Object.keys(obj); const eid=document.getElementById('editId').value; if(eid){ const t=txs.find(x=>x.id===eid); if(t && t.category && !list.includes(t.category)) list.push(t.category); } s.innerHTML=list.map(c=>'<option>'+c+'</option>').join(''); document.getElementById('catLabel').textContent= type==='income'?'نوع القبض *':'نوع الدفع / فئة المصروف *'; document.getElementById('saveBtn').textContent= document.getElementById('editId').value? '💾 حفظ التعديل' : (type==='income'?'💾 حفظ القبض':'💾 حفظ الدفع'); document.getElementById('saveBtn').className='btn'+(type==='expense'?' exp':''); setSubCats(); }
+  const s=document.getElementById('category'); const obj= type==='income'?incCats:expCats; let list=Object.keys(obj); const eid=document.getElementById('editId').value; if(eid){ const t=txs.find(x=>x.id===eid); if(t && t.category && !list.includes(t.category)) list.push(t.category); } s.innerHTML=list.map(c=>'<option>'+c+'</option>').join(''); document.getElementById('catLabel').textContent= type==='income'?'نوع القبض *':'نوع الدفع / فئة المصروف *'; document.getElementById('saveBtn').textContent= document.getElementById('editId').value? '💾 حفظ التعديل' : (type==='income'?'💾 حفظ القبض':'💾 حفظ الدفع'); document.getElementById('saveBtn').className='btn'+(type==='expense'?' exp':''); setSubCats(); csSync('category'); }
+// ---- قوائم منسدلة مخصصة (بديل عن <select> الأصلي في أندرويد) ----
+// نافذة <select> الأصلية في WebView تعرض نحو 6 عناصر فقط في الشاشة الأولى،
+// فيظن المستخدم أن القائمة فيها 6 عناصر فقط. القائمة المخصصة تعرض كل
+// العناصر مع تمرير داخلي وبحث. الـ <select> الأصلي يبقى مخفياً كمصدر
+// الحقيقة الوحيد، وكل الكود القديم يقرأ منه ويكتب فيه كالمعتاد.
+function csSync(id){
+  var sel=document.getElementById(id); if(!sel) return;
+  var list=document.getElementById('csList-'+id); if(!list) return;
+  var btn=document.querySelector('#csBtn-'+id+' .cs-val');
+  var cur=sel.options[sel.selectedIndex];
+  if(btn) btn.textContent=cur?cur.text:'—';
+  list.innerHTML='';
+  Array.from(sel.options).forEach(function(o){
+    var b=document.createElement('button');
+    b.type='button'; b.className='cs-item'+(o.selected?' selected':'');
+    b.textContent=o.text; b.setAttribute('data-v', o.value);
+    list.appendChild(b);
+  });
+  var s=document.getElementById('csSearch-'+id);
+  if(s){ s.value=''; s.placeholder='ابحث بين '+sel.options.length+' عنصر...'; }
+}
+function csCloseAll(exceptId){
+  document.querySelectorAll('.cs.open').forEach(function(el){ if(el.id!=='cs-'+exceptId) el.classList.remove('open'); });
+}
+function csInit(id){
+  var wrap=document.getElementById('cs-'+id); if(!wrap) return;
+  var btn=document.getElementById('csBtn-'+id), sel=document.getElementById(id);
+  var search=document.getElementById('csSearch-'+id), list=document.getElementById('csList-'+id);
+  if(!btn||!sel||!list) return;
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    var wasOpen=wrap.classList.contains('open');
+    csCloseAll(id);
+    if(!wasOpen){ wrap.classList.add('open'); csSync(id); if(search) search.focus(); }
+  });
+  list.addEventListener('click', function(e){
+    var item=e.target.closest('.cs-item'); if(!item) return;
+    sel.value=item.getAttribute('data-v');
+    sel.dispatchEvent(new Event('change'));
+    csSync(id); wrap.classList.remove('open');
+  });
+  if(search){
+    search.addEventListener('click', function(e){ e.stopPropagation(); });
+    search.addEventListener('input', function(){
+      var q=search.value.trim();
+      var empty=list.querySelector('.cs-empty'); if(empty) empty.remove();
+      var shown=0;
+      list.querySelectorAll('.cs-item').forEach(function(it){
+        var ok=!q || it.textContent.indexOf(q)>=0;
+        it.style.display=ok?'':'none'; if(ok) shown++;
+      });
+      if(!shown){ var d=document.createElement('div'); d.className='cs-empty'; d.textContent='لا نتائج مطابقة'; list.appendChild(d); }
+    });
+  }
+}
+document.addEventListener('click', function(e){ if(!e.target.closest('.cs')) csCloseAll(''); });
+['category','subCategory','expCatSelect','incCatSelect'].forEach(csInit);
 function setType(t){
   type=t;
   document.getElementById('tabInc').className= t==='income'?'active-inc':'';
@@ -917,7 +993,7 @@ window.quickAdd=function(main){
   let found=false; for(let i=0;i<s.options.length;i++){ if(s.options[i].value===main){ found=true; break; } }
   if(found) s.value=main;
   setSubCats();
-  const ss=document.getElementById('subCategory'); if(ss&&ss.options.length) ss.selectedIndex=0;
+  const ss=document.getElementById('subCategory'); if(ss&&ss.options.length) ss.selectedIndex=0; csSync('category'); csSync('subCategory');
   document.getElementById('amount').focus();
   window.scrollTo({top:0,behavior:'smooth'});
 };
@@ -1094,7 +1170,7 @@ window.editTx=function(id){
     document.getElementById('walletTo').value=t.toWallet||'sham';
   } else {
     document.getElementById('wallet').value=t.wallet;
-    setCats(); document.getElementById('category').value=t.category; if(t.type==='expense'){ setSubCats(); document.getElementById('subCategory').value=txSub(t); }
+    setCats(); document.getElementById('category').value=t.category; if(t.type==='expense'){ setSubCats(); document.getElementById('subCategory').value=txSub(t); } csSync('category'); csSync('subCategory');
   }
   document.getElementById('note').value=t.note||'';
   document.getElementById('cancelEdit').style.display='block';
@@ -1428,6 +1504,7 @@ function renderCatLists(){
   }
   renderOne('expense', expCats, 'expCatSelect', 'expCatList');
   renderOne('income', incCats, 'incCatSelect', 'incCatList');
+  csSync('expCatSelect'); csSync('incCatSelect');
 }
 function renderCurList(){
   const el=document.getElementById('curList'); if(!el) return;
@@ -1713,7 +1790,7 @@ function applyVoiceDraft(text, srcLabel){
   if(r.currency){ document.getElementById('currency').value=r.currency; }
   if(r.wallet){ document.getElementById('wallet').value=r.wallet; }
   document.getElementById('txDate').value=r.date;
-  if(r.category){ setCats(); document.getElementById('category').value=r.category; setSubCats(); }
+  if(r.category){ setCats(); document.getElementById('category').value=r.category; setSubCats(); csSync('category'); }
   if(r.desc){ document.getElementById('note').value=r.desc; }
   // Notes: the description parsed from speech goes into the (optional) notes
   // field, editable in the draft before saving. If nothing was parsed, keep
