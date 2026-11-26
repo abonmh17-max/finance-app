@@ -88,7 +88,7 @@ select.native-hidden{display:none}
 .cs-panel{display:none;position:absolute;top:calc(100% + 4px);inset-inline:0;z-index:50;background:var(--card);border:1px solid var(--border2);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);overflow:hidden}
 .cs.open .cs-panel{display:block}
 .cs-search{width:100%;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:10px 12px;font-size:15px}
-.cs-list{max-height:280px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.cs-list{max-height:calc(100vh - 140px);overflow-y:auto;-webkit-overflow-scrolling:touch} /* بلا حد عددي: تتمدد بطول الشاشة، والتمرير الداخلي فقط إذا تجاوزت القائمة طول الشاشة نفسها */
 .cs-item{display:block;width:100%;text-align:right;padding:11px 12px;border:none;background:none;font-size:16px;font-family:inherit;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border)}
 .cs-item:last-child{border-bottom:none}
 .cs-item.selected{background:var(--soft);font-weight:800}
