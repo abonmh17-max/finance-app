@@ -265,7 +265,7 @@ input[type=date]{direction:ltr;text-align:right}
 </div>
 
 <div class="card">
-<h2>التقرير التفاعلي</h2>
+<h2>📊 التقرير وسجل الحركات</h2>
 <div class="filters" id="periodFilters">
 <button data-p="today">اليوم</button>
 <button data-p="week">هذا الأسبوع (آخر 7 أيام)</button>
@@ -280,18 +280,6 @@ input[type=date]{direction:ltr;text-align:right}
 <input id="reportTo" type="date">
 <button class="btn secondary" id="clearReportDates" type="button" style="margin-top:0;padding:9px 12px">✖ مسح</button>
 </div>
-<p class="hint" id="periodLabel"></p>
-<div id="report"></div>
-<h3 style="margin-top:14px">أين أنفقت؟</h3>
-<div id="spentByCat"></div>
-<h3>من أين قبضت؟</h3>
-<div id="incByCat"></div>
-<h3>المصروف حسب التصنيف الفرعي</h3>
-<div id="spentBySubCat"></div>
-</div>
-
-<div class="card">
-<h2>سجل الحركات</h2>
 <div class="search-row">
 <input id="search" type="search" placeholder="🔍 ابحث في الفئة أو الملاحظة...">
 </div>
@@ -306,16 +294,24 @@ input[type=date]{direction:ltr;text-align:right}
 <select id="filterCur"><option value="">كل العملات</option><option value="SYP">ل.س</option><option value="USD">$</option><option value="EUR">€</option></select>
 <select id="filterWallet"><option value="">كل المحافظ</option><option value="cash">كاش</option><option value="sham">شام كاش</option></select>
 </div>
-<div class="search-row">
-<label style="margin:0;align-self:center">📅 من</label>
-<input id="filterFrom" type="date">
-<label style="margin:0;align-self:center">إلى</label>
-<input id="filterTo" type="date">
-<button class="btn secondary" id="clearDateFilter" type="button" style="margin-top:0;padding:9px 12px">✖ مسح</button>
+<p class="hint" id="periodLabel"></p>
+<div id="report"></div>
+<div id="secSpent">
+<h3 style="margin-top:14px">أين أنفقت؟</h3>
+<div id="spentByCat"></div>
 </div>
-<div id="listTotals" style="margin:10px 0 4px"></div>
+<div id="secInc">
+<h3>من أين قبضت؟</h3>
+<div id="incByCat"></div>
+</div>
+<div id="secSub">
+<h3>المصروف حسب التصنيف الفرعي</h3>
+<div id="spentBySubCat"></div>
+</div>
+<h3 style="margin-top:14px">الحركات</h3>
 <div id="list"></div>
 </div>
+
 </section>
 
 
@@ -1042,6 +1038,20 @@ function renderHomeDebts(){
   }).join('');
   el.innerHTML=rows||'<p class="empty">لا توجد ديون — كل شيء مسدد ✅</p>';
 }
+// ---- الفلاتر الموحدة (الخيار أ: دمج التقرير مع السجل) ----
+// One filter set drives the report totals, the breakdowns, the list AND the
+// export: period + custom date range + search + type + currency + wallet.
+// The old second date range (filterFrom/filterTo) and #listTotals are gone.
+function listMatch(t){
+  const q=(document.getElementById('search').value||'').trim();
+  const ft=document.getElementById('filterType').value, fc=document.getElementById('filterCur').value, fw=document.getElementById('filterWallet').value;
+  if(ft&&t.type!==ft) return false;
+  if(fc&&t.currency!==fc) return false;
+  if(fw){ if(t.type==='transfer'){ if(t.fromWallet!==fw&&t.toWallet!==fw) return false; } else if(t.wallet!==fw) return false; }
+  if(q && !((t.category||'')+' '+(t.subCat||'')+' '+(t.note||'')).includes(q)) return false;
+  return true;
+}
+function unifiedFiltered(){ return txs.filter(t=>inPeriod(t.date) && listMatch(t)); }
 function render(){
   // Hero balance (Sham Cash style): ONE big main balance with currency tabs,
   // breakdown for the selected currency, compact totals for the other currencies.
@@ -1090,11 +1100,12 @@ function render(){
   syncCurrencySelects(); renderCatLists(); renderCurList(); renderDebts();
   const lockBtn=document.getElementById('lockBtn'); if(lockBtn) lockBtn.textContent= heroLocked ? '🔒' : '🔓';
   const eyeBtn=document.getElementById('eyeBtn'); if(eyeBtn) eyeBtn.textContent= heroHidden ? '🙈' : '👁️';
-  // Report for selected period (based on tx.date, NOT entry time)
-  const ptx=txs.filter(t=>inPeriod(t.date));
+  // Report for selected period (based on tx.date, NOT entry time) — now the
+  // same unified set as the list below, so totals and list can never disagree.
+  const ptx=unifiedFiltered();
   const rg0=reportCustomRange();
   document.querySelectorAll('#periodFilters button').forEach(function(b){ b.classList.toggle('active', !(rg0.f||rg0.t) && b.dataset.p===period); });
-  document.getElementById('periodLabel').textContent='الفترة: '+periodName()+' — عدد الحركات في هذه الفترة: '+ptx.length+' — تُحسب كل عملية حسب تاريخها الخاص.';
+  document.getElementById('periodLabel').textContent='الفترة: '+periodName()+' — عدد الحركات المطابقة: '+ptx.length+' — تُحسب كل عملية حسب تاريخها الخاص.';
   let rh='';
   Object.keys(CUR).forEach(c=>{
     const inc=ptx.filter(t=>t.type==='income'&&t.currency===c).reduce((s,t)=>s+ +t.amount,0);
@@ -1128,37 +1139,16 @@ function render(){
     return pieHTML(entries);
   }
   document.getElementById('spentBySubCat').innerHTML=bySubCat('expense');
+  // Hide a breakdown section when the unified filter leaves it empty
+  // (e.g. type=expense hides the income pie; type=income hides both expense pies).
+  document.getElementById('secSpent').style.display=ptx.some(t=>t.type==='expense')?'':'none';
+  document.getElementById('secInc').style.display=ptx.some(t=>t.type==='income')?'':'none';
+  document.getElementById('secSub').style.display=ptx.some(t=>t.type==='expense')?'':'none';
   renderHomeDebts();
   renderQuickGrid(); renderMonthlyChart();
-  // List (search + filters)
-  const q=(document.getElementById('search').value||'').trim();
-  const ft=document.getElementById('filterType').value, fc=document.getElementById('filterCur').value, fw=document.getElementById('filterWallet').value;
-  const fd=document.getElementById('filterFrom').value, td=document.getElementById('filterTo').value;
-  const sorted=[...txs].sort((a,b)=> (b.date||'').localeCompare(a.date||'') || (b.createdAt||0)-(a.createdAt||0));
-  const shown=sorted.filter(t=>{
-    if(ft&&t.type!==ft) return false; if(fc&&t.currency!==fc) return false;
-    if(fw){ if(t.type==='transfer'){ if(t.fromWallet!==fw&&t.toWallet!==fw) return false; } else if(t.wallet!==fw) return false; }
-    if(fd&&(t.date||'')<fd) return false; if(td&&(t.date||'')>td) return false;
-    if(q && !((t.category||'')+' '+(t.subCat||'')+' '+(t.note||'')).includes(q)) return false; return true;
-  });
-  // Totals for exactly the rows the list shows (per currency, never summed across currencies)
-  (function(){
-    const tl=document.getElementById('listTotals'); if(!tl) return;
-    if(!shown.length){ tl.innerHTML='<p class="empty">لا توجد حركات مطابقة للفلتر</p>'; return; }
-    let out='';
-    Object.keys(CUR).forEach(c=>{
-      const inc=shown.filter(t=>t.type==='income'&&t.currency===c).reduce((s,t)=>s+ +t.amount,0);
-      const exp=shown.filter(t=>t.type==='expense'&&t.currency===c).reduce((s,t)=>s+ +t.amount,0);
-      const trf=shown.filter(t=>t.type==='transfer'&&t.currency===c).reduce((s,t)=>s+ +t.amount,0);
-      const parts=[];
-      if(ft!=='expense'&&ft!=='transfer'&&inc) parts.push('⬇ قبض: '+maskNum(inc));
-      if(ft!=='income'&&ft!=='transfer'&&exp) parts.push('⬆ دفع: '+maskNum(exp));
-      if(ft!=='income'&&ft!=='expense'&&trf) parts.push('🔄 تحويل: '+maskNum(trf));
-      if(!parts.length) return;
-      out+='<div class="bar-row"><span><span class="tag-pill" style="background:'+curColor(c)+'">'+c+'</span>'+curSymbol(c)+'</span><span>'+parts.join(' • ')+'</span></div>';
-    });
-    tl.innerHTML=out||'<p class="empty">لا توجد حركات مطابقة للفلتر</p>';
-  })();
+  // List: the same unified set as the report above (ptx) — one filter set
+  // drives both, so the list shows exactly the rows the totals describe.
+  const shown=[...ptx].sort((a,b)=> (b.date||'').localeCompare(a.date||'') || (b.createdAt||0)-(a.createdAt||0));
   const list=document.getElementById('list');
   if(!shown.length){ list.innerHTML='<p class="empty">لا توجد حركات مطابقة.</p>'; return; }
   let prevDate='';
@@ -1442,8 +1432,7 @@ document.getElementById('form').addEventListener('submit',e=>{
 document.getElementById('periodFilters').addEventListener('click',e=>{ if(e.target.dataset.p){ period=e.target.dataset.p; document.getElementById('reportFrom').value=''; document.getElementById('reportTo').value=''; document.querySelectorAll('#periodFilters button').forEach(b=>b.classList.toggle('active',b===e.target)); render(); } });
 ['reportFrom','reportTo'].forEach(id=>document.getElementById(id).addEventListener('input',render));
 document.getElementById('clearReportDates').onclick=function(){ document.getElementById('reportFrom').value=''; document.getElementById('reportTo').value=''; period='all'; render(); };
-['search','filterType','filterCur','filterWallet','filterFrom','filterTo'].forEach(id=>document.getElementById(id).addEventListener('input',render));
-document.getElementById('clearDateFilter').onclick=function(){ document.getElementById('filterFrom').value=''; document.getElementById('filterTo').value=''; render(); };
+['search','filterType','filterCur','filterWallet'].forEach(id=>document.getElementById(id).addEventListener('input',render));
 document.getElementById('typeFilterBtns').addEventListener('click',e=>{ const t=e.target&&e.target.dataset?e.target.dataset.t:undefined; if(t===undefined) return; document.getElementById('filterType').value=t; document.querySelectorAll('#typeFilterBtns button').forEach(b=>b.classList.toggle('active',b===e.target)); render(); });
 function summaryRows(list){
   const rows=[];
@@ -1461,15 +1450,13 @@ function catRows(list, kind){
 }
 document.getElementById('exportBtn').onclick=()=>{
   if(typeof XLSX==='undefined'){ alert('مكتبة Excel غير متوفرة في هذه النسخة'); return; }
-  const q=(document.getElementById('search').value||'').trim();
-  const ft=document.getElementById('filterType').value, fc=document.getElementById('filterCur').value, fw=document.getElementById('filterWallet').value;
-  const fd=document.getElementById('filterFrom').value, td=document.getElementById('filterTo').value;
-  const shown=[...txs].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).filter(t=>{ if(ft&&t.type!==ft) return false; if(fc&&t.currency!==fc) return false; if(fw){ if(t.type==='transfer'){ if(t.fromWallet!==fw&&t.toWallet!==fw) return false; } else if(t.wallet!==fw) return false; } if(fd&&(t.date||'')<fd) return false; if(td&&(t.date||'')>td) return false; if(q && !((t.category||'')+' '+(t.subCat||'')+' '+(t.note||'')).includes(q)) return false; return true; });
+  // Export exports exactly what the merged card shows: the unified filter set.
+  const shown=[...unifiedFiltered()].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   const txRows=shown.map(t=>({ 'التاريخ':t.date, 'النوع':t.type==='income'?'قبض':t.type==='expense'?'دفع':'تحويل', 'الفئة':t.type==='transfer'?'تحويل':t.category, 'التصنيف الفرعي':t.type==='income'?'':txSub(t), 'العملة':t.currency, 'المحفظة':t.type==='transfer'?(WALLET[t.fromWallet]+' ← '+WALLET[t.toWallet]):WALLET[t.wallet], 'المبلغ':+t.amount, 'ملاحظات':t.note||'' }));
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(txRows.length?txRows:[{'التاريخ':'','النوع':'لا توجد حركات','الفئة':'','التصنيف الفرعي':'','العملة':'','المحفظة':'','المبلغ':0,'ملاحظات':''}]), 'الحركات');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows(txs)), 'الملخص الكلي');
-  const ptx=txs.filter(t=>inPeriod(t.date));
+  const ptx=unifiedFiltered();
   const periodRows=[...summaryRows(ptx).map(r=>({...r,'الفترة':periodName()})), ...catRows(ptx,'expense').map(r=>({'العملة':'مصروف — '+r['الفئة'],'إجمالي القبض':'','إجمالي الدفع':r['المبلغ'],'المتبقي':'','الفترة':periodName()})), ...catRows(ptx,'income').map(r=>({'العملة':'قبض — '+r['الفئة'],'إجمالي القبض':r['المبلغ'],'إجمالي الدفع':'','المتبقي':'','الفترة':periodName()}))];
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(periodRows), 'ملخص الفترة');
   const debtRows=debts.map(function(d){ return { 'التاريخ':d.date, 'النوع':d.type==='owed'?'دين لي':'دين عليّ', 'الشخص':d.person, 'العملة':d.currency, 'المبلغ':+d.amount, 'المسدد':+(d.paid||0), 'المتبقي':debtRemaining(d), 'تاريخ الاستحقاق':d.due||'', 'الحالة':debtStatus(d)==='paid'?'مسدد':(debtStatus(d)==='partial'?'مسدد جزئياً':'قائم'), 'ملاحظات':d.note||'' }; });
