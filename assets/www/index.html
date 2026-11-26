@@ -238,15 +238,15 @@ input[type=date]{direction:ltr;text-align:right}
 <div class="row">
 <div><label>المبلغ *</label><input id="amount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="مثال: 500000" required></div>
 <div><label>العملة *</label><select id="currency">
-<option value="SYP">ل.س</option><option value="USD">$</option>
-<option value="EUR">€</option>
+<option value="SYP">SYP</option><option value="USD">USD</option>
+<option value="EUR">EUR</option>
 </select></div>
 </div>
 <div class="row">
 <div id="walletRow"><label>مكان المبلغ *</label><select id="wallet">
 <option value="cash">كاش</option><option value="sham">شام كاش</option>
 </select></div>
-<div><label>التاريخ * <button class="info-btn" type="button" title="ما هو هذا التاريخ؟" data-info="⚠️ التاريخ هو تاريخ العملية نفسها، وليس وقت إدخالها. إذا كانت العملية قديمة، غيّر التاريخ لتاريخها الحقيقي، وستُحسب في تقرير ذلك التاريخ وليس في تقرير اليوم.">ⓘ</button></label><input id="txDate" type="date" required><div class="day-row"><input id="txDayOnly" type="number" min="1" max="31" inputmode="numeric" placeholder="رقم اليوم (1–31)"><button class="btn secondary" id="txTodayBtn" type="button">اليوم</button></div></div>
+<div><label>التاريخ * <button class="info-btn" type="button" title="ما هو هذا التاريخ؟" data-info="⚠️ التاريخ هو تاريخ العملية نفسها، وليس وقت إدخالها. إذا كانت العملية قديمة، غيّر التاريخ لتاريخها الحقيقي، وستُحسب في تقرير ذلك التاريخ وليس في تقرير اليوم.">ⓘ</button></label><input id="txDate" type="date" required><div class="day-row"><input id="txDayOnly" type="number" min="1" max="31" inputmode="numeric" placeholder="رقم اليوم (1–31)"></div></div>
 </div>
 <div class="row" id="transferWallets" style="display:none">
 <div><label>من *</label><select id="walletFrom">
@@ -291,7 +291,7 @@ input[type=date]{direction:ltr;text-align:right}
 </div>
 <input type="hidden" id="filterType" value="">
 <div class="search-row">
-<select id="filterCur"><option value="">كل العملات</option><option value="SYP">ل.س</option><option value="USD">$</option><option value="EUR">€</option></select>
+<select id="filterCur"><option value="">كل العملات</option><option value="SYP">SYP</option><option value="USD">USD</option><option value="EUR">EUR</option></select>
 <select id="filterWallet"><option value="">كل المحافظ</option><option value="cash">كاش</option><option value="sham">شام كاش</option></select>
 </div>
 <p class="hint" id="periodLabel"></p>
@@ -935,7 +935,6 @@ function applyDayOnly(){
 }
 document.getElementById('txDate').addEventListener('change', syncDayFromDate);
 document.getElementById('txDayOnly').addEventListener('change', applyDayOnly);
-document.getElementById('txTodayBtn').onclick=function(){ document.getElementById('txDate').value=todayISO(); syncDayFromDate(); };
 syncDayFromDate();
 function reportCustomRange(){
   const rf=document.getElementById('reportFrom'), rt=document.getElementById('reportTo');
@@ -1110,11 +1109,11 @@ function render(){
   Object.keys(CUR).forEach(c=>{
     const inc=ptx.filter(t=>t.type==='income'&&t.currency===c).reduce((s,t)=>s+ +t.amount,0);
     const exp=ptx.filter(t=>t.type==='expense'&&t.currency===c).reduce((s,t)=>s+ +t.amount,0);
-    if(inc||exp) rh+='<div class="bar-row"><span>'+curSymbol(c)+'</span><span>قبض '+fmt(inc)+' • أنفقت '+fmt(exp)+' • بقي '+fmt(inc-exp)+'</span></div>';
+    if(inc||exp) rh+='<div class="bar-row"><span><span class="tag-pill" style="background:'+curColor(c)+'">'+c+'</span></span><span><span style="color:var(--green);font-weight:800">قبض '+fmt(inc)+'</span> • <span style="color:var(--red);font-weight:800">أنفقت '+fmt(exp)+'</span> • <span style="color:var(--accent-dark);font-weight:800">بقي '+fmt(inc-exp)+'</span></span></div>';
   });
   document.getElementById('report').innerHTML= rh||'<p class="empty">لا حركات في هذه الفترة.</p>';
   function byCat(kind){
-    const map={}; ptx.filter(t=>t.type===kind).forEach(t=>{ const k=t.category+' ('+curSymbol(t.currency)+')'; map[k]=(map[k]||0)+ +t.amount; });
+    const map={}; ptx.filter(t=>t.type===kind).forEach(t=>{ const k=t.category+' ('+t.currency+')'; map[k]=(map[k]||0)+ +t.amount; });
     const entries=Object.entries(map).sort((a,b)=>b[1]-a[1]);
     if(!entries.length) return '<p class="empty">—</p>';
     return pieHTML(entries);
@@ -1126,14 +1125,14 @@ function render(){
       const cash=ptx.filter(t=>t.type===kind&&t.currency===c&&t.wallet==='cash').reduce((s,t)=>s+ +t.amount,0);
       const sham=ptx.filter(t=>t.type===kind&&t.currency===c&&t.wallet==='sham').reduce((s,t)=>s+ +t.amount,0);
       if(!cash&&!sham) return;
-      out+='<div class="bar-row"><span><span class="tag-pill" style="background:'+curColor(c)+'">'+c+'</span>'+curSymbol(c)+'</span><span>💵 كاش '+fmt(cash)+' • 📱 شام كاش '+fmt(sham)+'</span></div>';
+      out+='<div class="bar-row"><span><span class="tag-pill" style="background:'+curColor(c)+'">'+c+'</span></span><span>💵 كاش '+fmt(cash)+' • 📱 شام كاش '+fmt(sham)+'</span></div>';
     });
     return out?'<div style="margin-top:8px">'+out+'</div>':'';
   }
   document.getElementById('spentByCat').innerHTML=byCat('expense')+walletSplit('expense');
   document.getElementById('incByCat').innerHTML=byCat('income')+walletSplit('income');
   function bySubCat(kind){
-    const map={}; ptx.filter(t=>t.type===kind).forEach(t=>{ const k=t.category+' — '+txSub(t)+' ('+curSymbol(t.currency)+')'; map[k]=(map[k]||0)+ +t.amount; });
+    const map={}; ptx.filter(t=>t.type===kind).forEach(t=>{ const k=t.category+' — '+txSub(t)+' ('+t.currency+')'; map[k]=(map[k]||0)+ +t.amount; });
     const entries=Object.entries(map).sort((a,b)=>b[1]-a[1]);
     if(!entries.length) return '<p class="empty">—</p>';
     return pieHTML(entries);
@@ -1157,11 +1156,11 @@ function render(){
     prevDate=t.date;
     if(t.type==='transfer'){
       const fromW=WALLET[t.fromWallet]||'', toW=WALLET[t.toWallet]||'';
-      return head+'<div class="tx" style="background:var(--soft);border-inline-start:4px solid #0369a1" onclick="showTx(\''+t.id+'\')"><div class="top"><div><b>🔄 تحويل — '+fromW+' ← '+toW+'</b><span class="date-badge">📅 '+weekdayName(t.date)+' '+t.date+'</span><div class="meta">'+curSymbol(t.currency)+'</div>'+(t.note?'<div class="meta">📝 ملاحظات: '+t.note+'</div>':'')+'</div><div class="amt" style="color:#0369a1">🔄 '+fmt(t.amount)+' '+t.currency+'</div></div></div>';
+      return head+'<div class="tx" style="background:var(--soft);border-inline-start:4px solid #0369a1" onclick="showTx(\''+t.id+'\')"><div class="top"><div><b>🔄 تحويل — '+fromW+' ← '+toW+'</b><span class="date-badge">📅 '+weekdayName(t.date)+' '+t.date+'</span><div class="meta">'+t.currency+'</div>'+(t.note?'<div class="meta">📝 ملاحظات: '+t.note+'</div>':'')+'</div><div class="amt" style="color:#0369a1">🔄 '+fmt(t.amount)+' '+t.currency+'</div></div></div>';
     }
     const sign=t.type==='income'?'+':'−';
     const cardStyle=t.type==='income'?' style="background:var(--tint-inc);border-inline-start:4px solid var(--green)"':' style="background:var(--tint-exp);border-inline-start:4px solid var(--red)"';
-    return head+'<div class="tx"'+cardStyle+' onclick="showTx(\''+t.id+'\')"><div class="top"><div><b>'+(t.type==='income'?'⬇ قبض':'⬆ دفع')+' — '+t.category+(t.type==='expense'&&t.subCat&&t.subCat!=='عام'?' • '+t.subCat:'')+'</b><span class="date-badge">📅 '+weekdayName(t.date)+' '+t.date+'</span><div class="meta">'+curSymbol(t.currency)+' • '+WALLET[t.wallet]+'</div>'+(t.note?'<div class="meta">📝 ملاحظات: '+t.note+'</div>':'')+'</div><div class="amt '+(t.type==='income'?'in':'out')+'">'+sign+' '+fmt(t.amount)+' '+t.currency+'</div></div></div>';
+    return head+'<div class="tx"'+cardStyle+' onclick="showTx(\''+t.id+'\')"><div class="top"><div><b>'+(t.type==='income'?'⬇ قبض':'⬆ دفع')+' — '+t.category+(t.type==='expense'&&t.subCat&&t.subCat!=='عام'?' • '+t.subCat:'')+'</b><span class="date-badge">📅 '+weekdayName(t.date)+' '+t.date+'</span><div class="meta">'+t.currency+' • '+WALLET[t.wallet]+'</div>'+(t.note?'<div class="meta">📝 ملاحظات: '+t.note+'</div>':'')+'</div><div class="amt '+(t.type==='income'?'in':'out')+'">'+sign+' '+fmt(t.amount)+' '+t.currency+'</div></div></div>';
   }).join('');
 }
 window.editTx=function(id){
@@ -1292,7 +1291,7 @@ function renderDebts(){
     else if(d.type==='owed') style=' style="background:var(--tint-inc);border-inline-start:4px solid var(--green)"';
     else style=' style="background:var(--tint-exp);border-inline-start:4px solid var(--red)"';
     if(overdue) style=' style="background:var(--tint-overdue);border-inline-start:4px solid var(--red);border-color:var(--red)"';
-    return '<div class="tx"'+style+'><div class="top"><div>'+label+' <b>'+escAttr(d.person)+'</b><span class="date-badge">📅 '+d.date+'</span><div class="meta">'+badge+' • '+curSymbol(d.currency)+debtDueInfo(d)+'</div><div class="meta">المبلغ: '+fmt(d.amount)+' '+d.currency+' • المسدد: '+fmt(d.paid||0)+' • المتبقي: '+fmt(rem)+'</div>'+(d.note?'<div class="meta">📝 '+escAttr(d.note)+'</div>':'')+'</div><div class="amt '+cls+'">'+fmt(rem)+' '+d.currency+'</div></div><div class="actions">'+(st!=='paid'?'<button onclick="debtPay(\''+d.id+'\')">💰 تسجيل دفعة</button><button onclick="debtSettle(\''+d.id+'\')">✅ تسديد كامل</button>':'')+((+d.paid||0)>0?'<button onclick="debtEditPaid(\''+d.id+'\')">✏️ تعديل المسدد</button>':'')+'<button onclick="editDebt(\''+d.id+'\')">✏️ تعديل</button><button onclick="delDebt(\''+d.id+'\')">🗑️ حذف</button></div></div>';
+    return '<div class="tx"'+style+'><div class="top"><div>'+label+' <b>'+escAttr(d.person)+'</b><span class="date-badge">📅 '+d.date+'</span><div class="meta">'+badge+' • '+d.currency+debtDueInfo(d)+'</div><div class="meta">المبلغ: '+fmt(d.amount)+' '+d.currency+' • المسدد: '+fmt(d.paid||0)+' • المتبقي: '+fmt(rem)+'</div>'+(d.note?'<div class="meta">📝 '+escAttr(d.note)+'</div>':'')+'</div><div class="amt '+cls+'">'+fmt(rem)+' '+d.currency+'</div></div><div class="actions">'+(st!=='paid'?'<button onclick="debtPay(\''+d.id+'\')">💰 تسجيل دفعة</button><button onclick="debtSettle(\''+d.id+'\')">✅ تسديد كامل</button>':'')+((+d.paid||0)>0?'<button onclick="debtEditPaid(\''+d.id+'\')">✏️ تعديل المسدد</button>':'')+'<button onclick="editDebt(\''+d.id+'\')">✏️ تعديل</button><button onclick="delDebt(\''+d.id+'\')">🗑️ حذف</button></div></div>';
   }).join('');
 }
 function setDebtType(t){
@@ -1473,9 +1472,9 @@ document.getElementById('exportCsv').onclick=()=>{
 // ---- Settings: editable categories + currencies (device only, localStorage) ----
 function escAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 function syncCurrencySelects(){
-  const cur=document.getElementById('currency'); if(cur){ const prev=cur.value; cur.innerHTML=curs.map(c=>'<option value="'+c.code+'">'+escAttr(curSymbol(c.code))+'</option>').join(''); if(CUR[prev]) cur.value=prev; }
-  const dc=document.getElementById('debtCurrency'); if(dc){ const dprev=dc.value; dc.innerHTML=curs.map(c=>'<option value="'+c.code+'">'+escAttr(curSymbol(c.code))+'</option>').join(''); if(CUR[dprev]) dc.value=dprev; }
-  const fc=document.getElementById('filterCur'); if(fc){ const fprev=fc.value; fc.innerHTML='<option value="">كل العملات</option>'+curs.map(c=>'<option value="'+c.code+'">'+escAttr(curSymbol(c.code))+'</option>').join(''); if(fprev==='' || CUR[fprev]) fc.value=fprev; }
+  const cur=document.getElementById('currency'); if(cur){ const prev=cur.value; cur.innerHTML=curs.map(c=>'<option value="'+c.code+'">'+escAttr(c.code)+'</option>').join(''); if(CUR[prev]) cur.value=prev; }
+  const dc=document.getElementById('debtCurrency'); if(dc){ const dprev=dc.value; dc.innerHTML=curs.map(c=>'<option value="'+c.code+'">'+escAttr(c.code)+'</option>').join(''); if(CUR[dprev]) dc.value=dprev; }
+  const fc=document.getElementById('filterCur'); if(fc){ const fprev=fc.value; fc.innerHTML='<option value="">كل العملات</option>'+curs.map(c=>'<option value="'+c.code+'">'+escAttr(c.code)+'</option>').join(''); if(fprev==='' || CUR[fprev]) fc.value=fprev; }
 }
 // Selected main category per kind in the Settings dropdowns (session only;
 // falls back to the first category whenever the selection disappears).
